@@ -468,6 +468,45 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* متحكمات الكمية الجديدة داخل السلة */
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            background: #f0ebdf;
+            border-radius: 6px;
+            padding: 2px;
+            gap: 8px;
+            border: 1px solid rgba(184, 144, 71, 0.2);
+        }
+
+        .qty-btn {
+            background: var(--white);
+            border: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: var(--transition-smooth);
+        }
+
+        .qty-btn:active {
+            transform: scale(0.85);
+        }
+
+        .qty-num {
+            font-weight: 700;
+            min-width: 16px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
         .content-item-row {
             display: flex;
             align-items: center;
@@ -548,7 +587,7 @@
             z-index: 2000;
             opacity: 0;
             pointer-events: none;
-            transition: var(--transition-smooth);
+            transition: background 0.3s ease, opacity 0.3s ease;
         }
 
         .image-viewer-modal.active {
@@ -557,16 +596,33 @@
             pointer-events: auto;
         }
 
+        .viewer-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none; /* لمنع السحب الافتراضي للمتصفح أثناء السحب الخاص بنا */
+        }
+
         .viewer-img {
             max-width: 95%;
             max-height: 75vh;
             object-fit: contain;
-            transform: scale(0.8);
+            transform: scale(0.8) translateY(0px);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
         .image-viewer-modal.active .viewer-img {
-            transform: scale(1);
+            transform: scale(1) translateY(0px);
+        }
+
+        /* عندما يقوم المستخدم بالسحب لأسفل */
+        .viewer-img.dragging {
+            transition: none !important;
         }
 
         .close-viewer {
@@ -582,6 +638,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 2001;
             transition: var(--transition-smooth);
         }
         .close-viewer:active {
@@ -595,6 +652,7 @@
             transform: translateX(-50%);
             display: flex;
             gap: 10px;
+            z-index: 2001;
         }
 
         .zoom-btn {
@@ -613,9 +671,30 @@
         }
         .zoom-btn:active { transform: scale(0.85); }
 
+        /* تلميح السحب للموبايل */
+        .swipe-hint {
+            position: absolute;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 0.8rem;
+            pointer-events: none;
+            display: none;
+            align-items: center;
+            gap: 5px;
+            animation: pulseHint 2s infinite;
+        }
+
+        @keyframes pulseHint {
+            0%, 100% { opacity: 0.4; transform: translate(-50%, 0); }
+            50% { opacity: 0.9; transform: translate(-50%, 5px); }
+        }
+
         @media (max-width: 600px) {
             .logo-title { font-size: 2.2rem; }
             .category-box { flex-grow: 1; padding: 10px 15px; }
+            .swipe-hint { display: flex; } /* يظهر فقط على الموبايل */
         }
 
         @media (min-width: 601px) {
@@ -662,7 +741,7 @@
     <!-- الهيدر -->
     <header>
         <div class="logo-title">إرث الدخون</div>
-        <div class="logo-subtitle">حيث يلتقي الإرث الاماراتي بالفخامة العصرية</div>
+        <div class="logo-subtitle">حيث يلتقي الإرث الأصيل بالفخامة العصرية</div>
     </header>
 
     <!-- مستطيل البحث الذكي -->
@@ -749,18 +828,23 @@
         </div>
     </div>
 
-    <!-- نافذة التكبير والتصغير المستحدثة للصور (Lightbox) -->
+    <!-- نافذة التكبير والتصغير المستحدثة للصور (Lightbox) مع دعم السحب -->
     <div class="image-viewer-modal" id="image-viewer-modal" onclick="closeViewerOverlay(event)">
         <div class="close-viewer" onclick="toggleImageViewer(false)"><i class="fa-solid fa-xmark"></i></div>
-        <img src="" alt="preview" class="viewer-img" id="viewer-img">
+        <div class="swipe-hint"><i class="fa-solid fa-arrow-down"></i> اسحب لأسفل للإغلاق</div>
+        
+        <div class="viewer-container" id="viewer-container">
+            <img src="" alt="preview" class="viewer-img" id="viewer-img">
+        </div>
+
         <div class="zoom-controls">
-            <button class="zoom-btn" onclick="executeZoom(0.2)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-            <button class="zoom-btn" onclick="executeZoom(-0.2)"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+            <button class="zoom-btn" onclick="executeZoom(0.2); event.stopPropagation();"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+            <button class="zoom-btn" onclick="executeZoom(-0.2); event.stopPropagation();"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
         </div>
     </div>
 
     <script>
-        const STORE_WHATSAPP = "97336825523"; 
+        const STORE_WHATSAPP = "97332202246"; 
 
         const products = [
             { id: 1, name: "Crown Black", category: "unisex", image: "P/جنسين/Crown Black.jpg", sizes: [{ size: "100 مل", price: 8 }] },
@@ -915,7 +999,7 @@
             if (btnElement) {
                 btnElement.classList.add('added');
                 btnElement.innerHTML = `تمت الإضافة! <i class="fa-solid fa-check"></i>`;
-                btnElement.disabled = true; // منع نقرات مزدوجة سريعة في نفس اللحظة
+                btnElement.disabled = true; 
                 
                 setTimeout(() => {
                     btnElement.classList.remove('added');
@@ -932,6 +1016,7 @@
             }, 500);
         }
 
+        /* [إضافة ميزة]: تحسين التحكم في الكمية داخل السلة */
         function updateCartFloatingUI() {
             const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
             document.getElementById('cart-count').innerText = totalQty;
@@ -950,11 +1035,15 @@
                     div.innerHTML = `
                         <div>
                             <strong>${item.name}</strong> <br>
-                            <small style="color:var(--gold-dark)">الحجم: ${item.size} × ${item.qty}</small>
+                            <small style="color:var(--gold-dark)">الحجم: ${item.size}</small>
                         </div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <span>${item.price * item.qty} د.ب</span>
-                            <i class="fa-solid fa-trash" style="color:#d9534f; cursor:pointer; padding:5px; transition: transform 0.2s;" onclick="removeFromCart(${index})"></i>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div class="qty-controls">
+                                <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+                                <span class="qty-num">${item.qty}</span>
+                                <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                            </div>
+                            <span style="min-width: 50px; text-align: left;">${item.price * item.qty} د.ب</span>
                         </div>
                     `;
                     listContainer.appendChild(div);
@@ -963,8 +1052,12 @@
             document.getElementById('cart-total').innerText = `${totalCost} د.ب`;
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
+        /* دالة زيادة ونقصان الكمية وحذف المنتج تلقائياً عند وصوله لـ 0 */
+        function updateQty(index, change) {
+            cart[index].qty += change;
+            if (cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            }
             updateCartFloatingUI();
         }
 
@@ -1007,13 +1100,16 @@
             window.open(`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-        // عارض الصور
+        // عارض الصور المطور
         let currentScale = 1;
+        const viewerImg = document.getElementById('viewer-img');
+        const viewerContainer = document.getElementById('viewer-container');
+
         function openImageViewer(imgSrc) {
             if(!imgSrc) return;
-            document.getElementById('viewer-img').src = imgSrc;
+            viewerImg.src = imgSrc;
             currentScale = 1;
-            applyImageTransform();
+            resetImageTransform();
             document.getElementById('image-viewer-modal').classList.add('active');
         }
 
@@ -1024,19 +1120,71 @@
         }
 
         function closeViewerOverlay(e) {
-            if(e.target.id === 'image-viewer-modal' || e.target.className === 'close-viewer') {
+            if(e.target.id === 'image-viewer-modal' || e.target.id === 'viewer-container' || e.target.className === 'close-viewer') {
                 toggleImageViewer(false);
             }
         }
 
         function executeZoom(amount) {
             currentScale = Math.min(Math.max(currentScale + amount, 1), 3);
-            applyImageTransform();
+            applyImageTransform(0);
         }
 
-        function applyImageTransform() {
-            document.getElementById('viewer-img').style.transform = `scale(${currentScale})`;
+        function applyImageTransform(translateY) {
+            viewerImg.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
         }
+
+        function resetImageTransform() {
+            viewerImg.style.transform = `scale(1) translateY(0px)`;
+        }
+
+        /* [إضافة ميزة]: تحسين تجربة عارض الصور على الموبايل عبر خاصية السحب للإغلاق Touch Swipe Down */
+        let startY = 0;
+        let currentY = 0;
+        let isDragging = false;
+
+        viewerContainer.addEventListener('touchstart', (e) => {
+            // نُفعل السحب فقط إذا لم تكن الصورة مكبرة (Zoom) لتفادي التداخل
+            if (currentScale > 1) return; 
+            startY = e.touches[0].clientY;
+            isDragging = true;
+            viewerImg.classList.add('dragging');
+        }, { passive: true });
+
+        viewerContainer.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            currentY = e.touches[0].clientY;
+            let diffY = currentY - startY;
+
+            // نسمح بالسحب للأسفل فقط (قيمة موجبة لـ diffY)
+            if (diffY > 0) {
+                // تقليل سرعة الحركة قليلاً لإعطاء شعور بالثقل والمرونة (Elastic Effect)
+                applyImageTransform(diffY * 0.8);
+            }
+        }, { passive: true });
+
+        viewerContainer.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            viewerImg.classList.remove('dragging');
+
+            let finalDiffY = currentY - startY;
+
+            // إذا سحب المستخدم مسافة أكثر من 120 بكسل، يتم إغلاق النافذة
+            if (finalDiffY > 120 && currentY !== 0) {
+                toggleImageViewer(false);
+            } else {
+                // إعادة الصورة لمكانها الطبيعي بتأثير سلس إذا لم يتخطَ مسافة الإغلاق
+                viewerImg.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                resetImageTransform();
+                setTimeout(() => {
+                    viewerImg.style.transition = '';
+                }, 300);
+            }
+            // إعادة تصفير القيم
+            startY = 0;
+            currentY = 0;
+        });
 
         window.onload = renderProducts;
     </script>

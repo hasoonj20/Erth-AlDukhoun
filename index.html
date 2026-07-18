@@ -182,6 +182,7 @@
             font-size: 3.5rem;
             border-bottom: 1px solid rgba(184, 144, 71, 0.1);
             position: relative;
+            cursor: pointer; /* تفعيل اليد لإشارة إمكانية الضغط والتكبير */
         }
         
         .product-img img {
@@ -209,7 +210,7 @@
             font-size: 1.15rem;
             font-weight: 700;
             color: var(--text-dark);
-            margin-bottom: 0; /* تم تصفيره ليتناسب مع الهيدر الجديد */
+            margin-bottom: 0;
         }
 
         /* زر محتويات البكج */
@@ -252,7 +253,7 @@
         }
 
         .size-btn-label input {
-            display: none; /* إخفاء زر الراديو التقليدي */
+            display: none;
         }
 
         .size-btn-custom {
@@ -441,7 +442,7 @@
         }
 
         .checkout-btn {
-            background: #25D366; /* لون واتساب */
+            background: #25D366;
             color: white;
             border: none;
             width: 100%;
@@ -460,6 +461,98 @@
         .checkout-btn:hover {
             background: #20ba5a;
         }
+
+        /* ==================== نافذة عرض وتكبير الصور (Lightbox) ==================== */
+        .image-viewer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .image-viewer-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .image-viewer-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewer-img {
+            max-width: 90%;
+            max-height: 85vh;
+            object-fit: contain;
+            transition: transform 0.1s ease-out;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .viewer-img:active {
+            cursor: grabbing;
+        }
+
+        .close-viewer {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 2rem;
+            color: #fff;
+            cursor: pointer;
+            z-index: 2001;
+            background: rgba(0,0,0,0.4);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .close-viewer:hover { background: #d9534f; }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 2001;
+        }
+
+        .zoom-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.4);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            transition: background 0.2s;
+        }
+        .zoom-btn:hover { background: var(--gold-primary); }
 
         @media (max-width: 600px) {
             .logo-title { font-size: 2.2rem; }
@@ -548,7 +641,7 @@
         </div>
     </div>
 
-    <!-- نافذة محتويات البكج العائمة (تظهر عند الضغط على محتويات البكج) -->
+    <!-- نافذة محتويات البكج العائمة -->
     <div class="cart-modal" id="package-contents-modal">
         <div class="cart-content">
             <i class="fa-solid fa-xmark close-cart" onclick="toggleContentsModal(false)"></i>
@@ -561,8 +654,20 @@
         </div>
     </div>
 
+    <!-- نافذة التكبير والتصغير المستحدثة للصور (Lightbox) -->
+    <div class="image-viewer-modal" id="image-viewer-modal" onclick="closeViewerOverlay(event)">
+        <div class="close-viewer" onclick="toggleImageViewer(false)"><i class="fa-solid fa-xmark"></i></div>
+        <div class="image-viewer-container">
+            <img src="" alt="preview" class="viewer-img" id="viewer-img">
+        </div>
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="executeZoom(0.2)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+            <button class="zoom-btn" onclick="executeZoom(-0.2)"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+        </div>
+    </div>
+
     <script>
-        // رقم الواتساب الخاص بصاحب المتجر (اكتب رقمك البحريني متبوعاً بمفتاح الدولة 973 بدون أصفار أو علامة +)
+        // رقم الواتساب الخاص بصاحب المتجر
         const STORE_WHATSAPP = "97336825523"; 
 
         // بيانات المنتجات
@@ -607,7 +712,6 @@
                     { size: "100 مل", price: 8 }
                 ]
             },
-
             {
                 id: 5,
                 name: "مجموعة عطر ديزاير",
@@ -625,7 +729,7 @@
                     "حقيبة",
                 ]
             },
-                        {
+            {
                 id: 6,
                 name: "مجموعة عطر جوتا",
                 category: "packages",
@@ -699,7 +803,7 @@
                     { size: "100 مل", price: 8 }
                 ]
             },
-                         {
+             {
                 id: 12,
                 name: "مجموعة عطر فورس",
                 category: "packages",
@@ -742,11 +846,9 @@
             }
 
             filtered.forEach(p => {
-                // التحقق من وجود خاصية المحتويات
                 const hasContents = p.contents && p.contents.length > 0;
                 
                 let sizeButtonsHTML = '';
-                // إذا لم يكن يحتوي على محتويات (منتج عادي)، نعرض أزرار السعة بشكل طبيعي
                 if (!hasContents) {
                     let sizeButtons = '';
                     p.sizes.forEach((s, index) => {
@@ -769,7 +871,6 @@
                     `;
                 }
 
-                // رابط "محتويات البكج" يظهر فقط إذا كانت الخاصية موجودة بالمنتج
                 const contentsLinkHTML = hasContents 
                     ? `<button class="package-contents-link" onclick="openContentsModal(${p.id})">محتويات البكج</button>` 
                     : '';
@@ -777,7 +878,8 @@
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
-                    <div class="product-img">
+                    <!-- عند الضغط على الصورة يتم تفعيل الفتح والتكبير بدالة openImageViewer -->
+                    <div class="product-img" onclick="openImageViewer('${p.image}')">
                         ${p.image ? `<img src="${p.image}" alt="${p.name}">` : `<i class="fa-solid ${p.icon || 'fa-bottle-flat-amber-glass'}"></i>`}
                     </div>
                     <div class="product-info">
@@ -788,7 +890,7 @@
                         ${sizeButtonsHTML}
                         <div class="product-bottom">
                             <span class="product-price" id="price-display-${p.id}">${p.sizes[0].price} د.ب</span>
-                            <button class="add-to-cart-btn" onclick="addToCart(${p.id})">إضافة للسلة</button>
+                            <button class="add-to-cart-btn" onclick="addToCart(${p.id}); event.stopPropagation();">إضافة للسلة</button>
                         </div>
                     </div>
                 `;
@@ -816,20 +918,17 @@
             toggleContentsModal(true);
         }
 
-        // تبديل ظهور نافذة المحتويات
         function toggleContentsModal(show) {
             const modal = document.getElementById('package-contents-modal');
             if(show) modal.classList.add('active');
             else modal.classList.remove('active');
         }
 
-        // تحديث السعر المعروض فور الضغط على زر السعة
         function updatePriceDisplay(productId, price) {
             const priceDisplay = document.getElementById(`price-display-${productId}`);
             priceDisplay.innerText = `${price} د.ب`;
         }
 
-        // تصفية المنتجات حسب الأقسام
         function selectCategory(cat, element) {
             currentCategory = cat;
             document.querySelectorAll('.category-box').forEach(box => box.classList.remove('active'));
@@ -841,11 +940,8 @@
             renderProducts();
         }
 
-        // إضافة العطور إلى السلة بناءً على الزر المختار
         function addToCart(productId) {
             const product = products.find(p => p.id === productId);
-            
-            // جلب الحجم المختار (إذا كان البكج مخفي السعة نأخذ الحجم الافتراضي الأول مباشرة)
             const selectedRadio = document.querySelector(`input[name="size-prod-${productId}"]:checked`);
             const selectedIndex = selectedRadio ? selectedRadio.value : 0;
             const selectedSizeInfo = product.sizes[selectedIndex];
@@ -866,7 +962,6 @@
             updateCartFloatingUI();
         }
 
-        // تحديث واجهة السلة
         function updateCartFloatingUI() {
             const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
             document.getElementById('cart-count').innerText = totalQty;
@@ -910,7 +1005,6 @@
             else modal.classList.remove('active');
         }
 
-        // إرسال الطلب للواتساب
         function sendToWhatsApp() {
             if(cart.length === 0) {
                 alert("يرجى إضافة منتجات للسلة أولاً قبل إتمام الطلب.");
@@ -941,6 +1035,107 @@
             
             window.open(whatsappURL, '_blank');
         }
+
+        // ==================== سكريبت ميزة الـ Image Viewer (Lightbox) المتطور ====================
+        let currentScale = 1;
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let translateX = 0, translateY = 0;
+        let initialPinchDistance = 0;
+
+        function openImageViewer(imgSrc) {
+            if(!imgSrc || imgSrc === 'undefined' || imgSrc === 'null' || imgSrc === '') return;
+            const viewerImg = document.getElementById('viewer-img');
+            viewerImg.src = imgSrc;
+            
+            currentScale = 1;
+            translateX = 0;
+            translateY = 0;
+            applyImageTransform();
+            
+            toggleImageViewer(true);
+        }
+
+        function toggleImageViewer(show) {
+            const modal = document.getElementById('image-viewer-modal');
+            if(show) modal.classList.add('active');
+            else modal.classList.remove('active');
+        }
+
+        function closeViewerOverlay(event) {
+            if(event.target.id === 'image-viewer-modal' || event.target.className === 'image-viewer-container') {
+                toggleImageViewer(false);
+            }
+        }
+
+        function applyImageTransform() {
+            const viewerImg = document.getElementById('viewer-img');
+            viewerImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+        }
+
+        function executeZoom(amount) {
+            currentScale += amount;
+            if(currentScale < 1) currentScale = 1; 
+            if(currentScale > 5) currentScale = 5; 
+            applyImageTransform();
+        }
+
+        document.getElementById('image-viewer-modal').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = e.deltaY < 0 ? 0.2 : -0.2;
+            executeZoom(zoomFactor);
+        }, { passive: false });
+
+        const viewerImg = document.getElementById('viewer-img');
+
+        function startGesture(e) {
+            isDragging = true;
+            if (e.touches && e.touches.length === 2) {
+                initialPinchDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            } else {
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                startX = clientX - translateX;
+                startY = clientY - translateY;
+            }
+        }
+
+        function moveGesture(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            if (e.touches && e.touches.length === 2) {
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const factor = currentDistance / initialPinchDistance;
+                currentScale = Math.min(Math.max(currentScale * factor, 1), 5);
+                initialPinchDistance = currentDistance; 
+                applyImageTransform();
+            } else if (currentScale > 1) { 
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                translateX = clientX - startX;
+                translateY = clientY - startY;
+                applyImageTransform();
+            }
+        }
+
+        function endGesture() {
+            isDragging = false;
+        }
+
+        viewerImg.addEventListener('mousedown', startGesture);
+        window.addEventListener('mousemove', moveGesture);
+        window.addEventListener('mouseup', endGesture);
+
+        viewerImg.addEventListener('touchstart', startGesture, { passive: false });
+        viewerImg.addEventListener('touchmove', moveGesture, { passive: false });
+        viewerImg.addEventListener('touchend', endGesture);
 
         window.onload = renderProducts;
     </script>

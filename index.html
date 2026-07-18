@@ -19,6 +19,8 @@
             --gold-dark: #8c6b30;
             --text-dark: #3a3226; /* بني داكن دافئ */
             --white: #ffffff;
+            --success-green: #2ec4b6; /* لون أخضر هادئ عند الإضافة الناجحة */
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -85,6 +87,12 @@
             padding: 5px 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.03);
             align-items: center;
+            transition: var(--transition-smooth);
+        }
+        
+        .search-box:focus-within {
+            border-color: var(--gold-primary);
+            box-shadow: 0 4px 20px rgba(184, 144, 71, 0.15);
         }
 
         .search-box select {
@@ -114,7 +122,7 @@
             margin-right: 8px;
         }
 
-        /* مربعات التصنيفات السريعة (عادت كما كانت تلتف تلقائياً) */
+        /* مربعات التصنيفات السريعة */
         .categories-container {
             display: flex;
             justify-content: center;
@@ -132,19 +140,24 @@
             border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: var(--transition-smooth);
             text-align: center;
             min-width: 100px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .category-box:active {
+            transform: scale(0.95);
         }
 
         .category-box:hover, .category-box.active {
             background: var(--gold-primary);
             color: var(--white);
             border-color: var(--gold-primary);
+            box-shadow: 0 4px 12px rgba(184, 144, 71, 0.25);
         }
 
-        /* شبكة المنتجات المحسنة للموبايل (عرض منتجين متجاورين) */
+        /* شبكة المنتجات المحسنة للموبايل */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -163,6 +176,12 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            transition: var(--transition-smooth);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(58, 50, 38, 0.08);
         }
 
         .product-img {
@@ -176,12 +195,18 @@
             font-size: 2.5rem;
             border-bottom: 1px solid rgba(184, 144, 71, 0.1);
             cursor: pointer;
+            overflow: hidden;
         }
         
         .product-img img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .product-card:hover .product-img img {
+            transform: scale(1.06);
         }
 
         .product-info {
@@ -217,9 +242,13 @@
             font-weight: 600;
             padding: 2px 0;
             text-align: right;
+            transition: color 0.2s;
+        }
+        .package-contents-link:hover {
+            color: var(--gold-primary);
         }
 
-        /* خيارات السعة المحسنة للموبايل */
+        /* خيارات السعة */
         .size-buttons-group {
             margin-bottom: 12px;
         }
@@ -256,12 +285,18 @@
             font-size: 0.75rem;
             font-weight: 600;
             color: var(--text-dark);
+            transition: var(--transition-smooth);
+        }
+
+        .size-btn-label:active .size-btn-custom {
+            transform: scale(0.95);
         }
 
         .size-btn-label input:checked + .size-btn-custom {
             background-color: var(--gold-primary);
             color: var(--white);
             border-color: var(--gold-primary);
+            box-shadow: 0 2px 8px rgba(184, 144, 71, 0.2);
         }
 
         .product-bottom {
@@ -277,6 +312,7 @@
             color: var(--gold-dark);
         }
 
+        /* زر إضافة للسلة المطور بالتأثيرات */
         .add-to-cart-btn {
             background: var(--gold-primary);
             color: var(--white);
@@ -288,9 +324,28 @@
             font-size: 0.85rem;
             width: 100%;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
         }
 
-        /* السلة العائمة المحسنة للموبايل */
+        .add-to-cart-btn:hover {
+            background: var(--gold-dark);
+        }
+
+        .add-to-cart-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* التأثير اللحظي الناجح عند الإضافة */
+        .add-to-cart-btn.added {
+            background-color: var(--success-green) !important;
+            transform: scale(1.03);
+            font-size: 0.82rem;
+            box-shadow: 0 4px 12px rgba(46, 196, 182, 0.3);
+        }
+
+        /* السلة العائمة */
         .cart-floating-btn {
             position: fixed;
             bottom: 20px;
@@ -307,6 +362,23 @@
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             z-index: 999;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cart-floating-btn:active {
+            transform: scale(0.9);
+        }
+
+        @keyframes cartPulse {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.2) rotate(-10deg); }
+            50% { transform: scale(1.2) rotate(10deg); }
+            80% { transform: scale(1.2) rotate(0deg); }
+            100% { transform: scale(1); }
+        }
+
+        .cart-floating-btn.bounce {
+            animation: cartPulse 0.5s ease-in-out forwards;
         }
 
         .cart-count {
@@ -319,6 +391,7 @@
             padding: 2px 6px;
             font-size: 0.7rem;
             font-weight: bold;
+            transition: var(--transition-smooth);
         }
 
         /* الشاشات العائمة */
@@ -328,18 +401,17 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0);
             display: flex;
             align-items: flex-end;
             justify-content: center;
             z-index: 1000;
-            opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s ease;
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .cart-modal.active {
-            opacity: 1;
+            background: rgba(0,0,0,0.5);
             pointer-events: auto;
         }
 
@@ -352,6 +424,12 @@
             overflow-y: auto;
             position: relative;
             box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .cart-modal.active .cart-content {
+            transform: translateY(0);
         }
 
         .close-cart {
@@ -361,6 +439,11 @@
             font-size: 1.3rem;
             cursor: pointer;
             color: #aaa;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .close-cart:active {
+            transform: scale(0.8);
+            color: #d9534f;
         }
 
         .cart-items-list, .contents-items-list {
@@ -377,6 +460,12 @@
             padding-bottom: 12px;
             border-bottom: 1px solid #f5f5f5;
             font-size: 0.9rem;
+            animation: fadeInItem 0.3s ease-in-out;
+        }
+
+        @keyframes fadeInItem {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .content-item-row {
@@ -434,26 +523,36 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            transition: var(--transition-smooth);
         }
 
-        /* ميزة Lightbox المحسنة للأجهزة الذكية */
+        .checkout-btn:hover {
+            background: #20ba5a;
+        }
+
+        .checkout-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ميزة Lightbox المحسنة للصور */
         .image-viewer-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s ease;
+            transition: var(--transition-smooth);
         }
 
         .image-viewer-modal.active {
+            background: rgba(0, 0, 0, 0.9);
             opacity: 1;
             pointer-events: auto;
         }
@@ -462,6 +561,12 @@
             max-width: 95%;
             max-height: 75vh;
             object-fit: contain;
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .image-viewer-modal.active .viewer-img {
+            transform: scale(1);
         }
 
         .close-viewer {
@@ -477,6 +582,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: var(--transition-smooth);
+        }
+        .close-viewer:active {
+            transform: scale(0.8);
         }
 
         .zoom-controls {
@@ -500,14 +609,15 @@
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(5px);
+            transition: var(--transition-smooth);
         }
+        .zoom-btn:active { transform: scale(0.85); }
 
         @media (max-width: 600px) {
             .logo-title { font-size: 2.2rem; }
             .category-box { flex-grow: 1; padding: 10px 15px; }
         }
 
-        /* التجاوب مع شاشات الكمبيوتر/التابلت الكبيرة */
         @media (min-width: 601px) {
             .products-grid {
                 grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -521,6 +631,7 @@
             }
             .add-to-cart-btn {
                 width: auto;
+                min-width: 110px;
             }
             .product-header-wrapper {
                 flex-direction: row;
@@ -535,6 +646,13 @@
                 width: 90%;
                 max-width: 500px;
                 border-radius: 20px;
+                transform: translateY(40px);
+                opacity: 0;
+                transition: var(--transition-smooth);
+            }
+            .cart-modal.active .cart-content {
+                transform: translateY(0);
+                opacity: 1;
             }
         }
     </style>
@@ -544,7 +662,7 @@
     <!-- الهيدر -->
     <header>
         <div class="logo-title">إرث الدخون</div>
-        <div class="logo-subtitle">حيث يلتقي الإرث الاماراتي بالفخامة العصرية</div>
+        <div class="logo-subtitle">حيث يلتقي الإرث البحريني بالفخامة العصرية</div>
     </header>
 
     <!-- مستطيل البحث الذكي -->
@@ -577,7 +695,7 @@
     </main>
 
     <!-- السلة العائمة أسفل اليسار -->
-    <div class="cart-floating-btn" onclick="toggleCart(true)">
+    <div class="cart-floating-btn" id="cart-floating-btn" onclick="toggleCart(true)">
         <i class="fa-solid fa-bag-shopping"></i>
         <span class="cart-count" id="cart-count">0</span>
     </div>
@@ -597,7 +715,6 @@
                 <span id="cart-total">0 د.ب</span>
             </div>
 
-            <!-- خيارات التوصيل للزبون -->
             <div class="delivery-options">
                 <h4>طريقة الاستلام:</h4>
                 <div class="radio-group">
@@ -612,7 +729,6 @@
                 </div>
             </div>
 
-            <!-- زر إتمام الطلب عبر واتساب -->
             <button class="checkout-btn" onclick="sendToWhatsApp()">
                 <i class="fa-brands fa-whatsapp"></i>
                 إتمام الطلب عبر الواتساب
@@ -727,7 +843,7 @@
                         ${sizeButtonsHTML}
                         <div class="product-bottom">
                             <span class="product-price" id="price-display-${p.id}">${p.sizes[0].price} د.ب</span>
-                            <button class="add-to-cart-btn" onclick="addToCart(${p.id}); event.stopPropagation();">إضافة للسلة</button>
+                            <button class="add-to-cart-btn" id="btn-add-${p.id}" onclick="addToCart(${p.id}, this); event.stopPropagation();">إضافة للسلة</button>
                         </div>
                     </div>
                 `;
@@ -774,7 +890,7 @@
             renderProducts();
         }
 
-        function addToCart(productId) {
+        function addToCart(productId, btnElement) {
             const product = products.find(p => p.id === productId);
             const selectedRadio = document.querySelector(`input[name="size-prod-${productId}"]:checked`);
             const selectedIndex = selectedRadio ? selectedRadio.value : 0;
@@ -794,6 +910,26 @@
                 });
             }
             updateCartFloatingUI();
+
+            // تأثير زر الإضافة التفاعلي اللحظي
+            if (btnElement) {
+                btnElement.classList.add('added');
+                btnElement.innerHTML = `تمت الإضافة! <i class="fa-solid fa-check"></i>`;
+                btnElement.disabled = true; // منع نقرات مزدوجة سريعة في نفس اللحظة
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('added');
+                    btnElement.innerHTML = "إضافة للسلة";
+                    btnElement.disabled = false;
+                }, 600);
+            }
+
+            // أنيميشن النبض للسلة العائمة
+            const cartBtn = document.getElementById('cart-floating-btn');
+            cartBtn.classList.add('bounce');
+            setTimeout(() => {
+                cartBtn.classList.remove('bounce');
+            }, 500);
         }
 
         function updateCartFloatingUI() {
@@ -818,7 +954,7 @@
                         </div>
                         <div style="display:flex; align-items:center; gap:10px;">
                             <span>${item.price * item.qty} د.ب</span>
-                            <i class="fa-solid fa-trash" style="color:#d9534f; cursor:pointer; padding:5px;" onclick="removeFromCart(${index})"></i>
+                            <i class="fa-solid fa-trash" style="color:#d9534f; cursor:pointer; padding:5px; transition: transform 0.2s;" onclick="removeFromCart(${index})"></i>
                         </div>
                     `;
                     listContainer.appendChild(div);
@@ -871,7 +1007,7 @@
             window.open(`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-        // عارض الصور المبسط والسريع للهواتف
+        // عارض الصور
         let currentScale = 1;
         function openImageViewer(imgSrc) {
             if(!imgSrc) return;

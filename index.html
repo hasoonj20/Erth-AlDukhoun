@@ -873,10 +873,9 @@
                 image: "P/جنسين/Crown Black.jpg", 
                 sizes: [
                     { size: "100 مل", price: 5 },
-
                 ] 
             },
-            { id: 2, name: "مجموعة سجنتشر", category: "packages", image: "P/بكجات/مجموعة سجنتشر.jpg", sizes: [{ size: "100 مل", price: 12 }] },
+            { id: 2, name: "مجموعة سجنتشر", category: "packages", image: "P/بكجات/مجموعة سجنتشر.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["طقم عطور مختارة فاخرة بسعة 100 مل"] },
             { id: 3, name: "سجنتشر سيلفر", category: "men", image: "P/رجالي/سجنتشر سيلفر.jpg", sizes: [{ size: "100 مل", price: 8 }] },
             { id: 4, name: "دخون روز", category: "women", image: "P/نسائي/دخون روز.jpg", sizes: [{ size: "100 مل", price: 8 }] },
             { id: 5, name: "مجموعة عطر ديزاير", category: "packages", image: "P/بكجات/مجموعة عطر ديزاير.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"] },
@@ -917,16 +916,16 @@
                 let sizeTopBadgeHTML = '';
                 let sizeBottomButtonsHTML = '';
 
-                // فحص الفرز الذكي للسعات[cite: 1]
-                if (p.sizes.length === 1) {
-                    // سعة واحدة فقط: يظهر مستطيل السعة الصغير في أعلى يسار كرت المنتج[cite: 1]
+                // فحص الفرز الذكي للسعات - التحديث الجديد: البكجات التي لها زر محتويات لا يظهر لها حجم بالموقع نهائياً[cite: 1]
+                if (p.sizes.length === 1 && !hasContents) {
+                    // سعة واحدة فقط لعطر فردي: يظهر مستطيل السعة الصغير في أعلى يسار كرت المنتج[cite: 1]
                     sizeTopBadgeHTML = `
                         <div class="product-size-badge-container">
                             <span class="single-size-badge">${p.sizes[0].size}</span>
                         </div>
                     `;
                 } else if (p.sizes.length > 1 && !hasContents) {
-                    // سعات متعددة: يعود للنظام القديم (أزرار اختيار راديو بالأسفل)[cite: 1]
+                    // سعات متعددة لعطر فردي: يعود للنظام القديم (أزرار اختيار راديو بالأسفل)[cite: 1]
                     let sizeRadioButtons = '';
                     p.sizes.forEach((s, index) => {
                         const checked = index === 0 ? 'checked' : '';
@@ -1018,7 +1017,6 @@
             const product = products.find(p => p.id === productId);
             let selectedIndex = 0;
 
-            // جلب السعة المختارة بناءً على النظام الفعال للمنتج[cite: 1]
             if (product.sizes.length > 1) {
                 const selectedRadio = document.querySelector(`input[name="size-prod-${productId}"]:checked`);
                 selectedIndex = selectedRadio ? selectedRadio.value : 0;
@@ -1033,14 +1031,15 @@
                 cart.push({
                     id: product.id,
                     name: product.name,
+                    category: product.category,
                     size: selectedSizeInfo.size,
                     price: selectedSizeInfo.price,
-                    qty: 1
+                    qty: 1,
+                    hasContents: product.contents && product.contents.length > 0 // لحفظ حالة زر محتويات البكج[cite: 1]
                 });
             }
             updateCartFloatingUI();
 
-            // تأثير زر الإضافة التفاعلي اللحظي
             if (btnElement) {
                 btnElement.classList.add('added');
                 btnElement.innerHTML = `تمت الإضافة! <i class="fa-solid fa-check"></i>`;
@@ -1053,7 +1052,6 @@
                 }, 600);
             }
 
-            // أنيميشن النبض للسلة العائمة
             const cartBtn = document.getElementById('cart-floating-btn');
             cartBtn.classList.add('bounce');
             setTimeout(() => {
@@ -1079,7 +1077,7 @@
                     div.innerHTML = `
                         <div>
                             <strong>${item.name}</strong> <br>
-                            <small style="color:var(--gold-dark)">الحجم: ${item.size}</small>
+                            ${(!item.hasContents && item.category !== 'packages') ? `<small style="color:var(--gold-dark)">الحجم: ${item.size}</small>` : ''}
                         </div>
                         <div style="display:flex; align-items:center; gap:12px;">
                             <div class="qty-controls">
@@ -1129,7 +1127,10 @@
             
             cart.forEach((item, i) => {
                 message += `*${i+1}- ${item.name}*\n`;
-                message += `السعة: ${item.size}\n`;
+                // منع ظهور السعة بالرسالة إذا كان بكج أو يحتوي على زر محتويات[cite: 1]
+                if (!item.hasContents && item.category !== 'packages') {
+                    message += `السعة: ${item.size}\n`;
+                }
                 message += `الكمية: ${item.qty}\n`;
                 message += `السعر: ${item.price * item.qty} د.ب\n\n`;
             });

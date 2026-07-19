@@ -862,9 +862,12 @@
     </div>
 
     <script>
+        
+        //رقم الواتساب الخاص بالعميل هو 32202246
+
         const STORE_WHATSAPP = "97336825523"; 
 
-        // مصفوفة المنتجات (تم إضافة سعات متعددة افتراضية للمنتج رقم 1 لتجربة النظام القديم)
+
         const products = [
             { 
                 id: 1, 
@@ -875,17 +878,95 @@
                     { size: "100 مل", price: 5 },
                 ] 
             },
-            { id: 2, name: "مجموعة سجنتشر", category: "packages", image: "P/بكجات/مجموعة سجنتشر.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["طقم عطور مختارة فاخرة بسعة 100 مل"] },
-            { id: 3, name: "سجنتشر سيلفر", category: "men", image: "P/رجالي/سجنتشر سيلفر.jpg", sizes: [{ size: "100 مل", price: 8 }] },
-            { id: 4, name: "دخون روز", category: "women", image: "P/نسائي/دخون روز.jpg", sizes: [{ size: "100 مل", price: 8 }] },
-            { id: 5, name: "مجموعة عطر ديزاير", category: "packages", image: "P/بكجات/مجموعة عطر ديزاير.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"] },
-            { id: 6, name: "مجموعة عطر جوتا", category: "packages", image: "P/بكجات/مجموعة عطر جوتا.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"] },
-            { id: 7, name: "مجموعة عطر ليغاسي", category: "packages", image: "P/بكجات/مجموعة عطر ليغاسي.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"] },
-            { id: 8, name: "سجنتشر بلاك", category: "unisex", image: "P/جنسين/سجنتشر بلاك.jpg", sizes: [{ size: "100 مل", price: 8 }] },
-            { id: 9, name: "سيجنتشر روز جولد", category: "unisex", image: "P/جنسين/سيجنتشر روز جولد.jpg", sizes: [{ size: "100 مل", price: 8 }] },
-            { id: 10, name: "بلقيس", category: "unisex", image: "P/جنسين/بلقيس.jpg", sizes: [{ size: "100 مل", price: 8 }] },
-            { id: 11, name: "كحيلان", category: "unisex", image: "P/جنسين/كحيلان.jpg", sizes: [{ size: "100 مل", price: 8 }] },
-            { id: 12, name: "مجموعة عطر فورس", category: "packages", image: "P/بكجات/مجموعة عطر فورس.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"] }
+            {
+                id: 2,
+                name: "مجموعة سجنتشر",
+                category: "packages",
+                image: "P/بكجات/مجموعة سجنتشر.jpg",
+                sizes: [{ size: "100 مل", price: 12 }],
+                contents: 
+                ["طقم عطور سجنتشر مكون من 4 عبوات بسعة 100 مل"] 
+            },
+
+            {
+                id: 3,
+                name: "سجنتشر سيلفر",
+                category: "men",
+                image: "P/رجالي/سجنتشر سيلفر.jpg",
+                sizes: [{ size: "100 مل", price: 8 }] 
+            },
+            {
+                id: 4,
+                name: "دخون روز",
+                category: "women",
+                image: "P/نسائي/دخون روز.jpg",
+                sizes: [{ size: "100 مل", price: 8 }] 
+            },
+            {
+                id: 5,
+                name: "مجموعة عطر ديزاير",
+                category: "packages",
+                image: "P/بكجات/مجموعة عطر ديزاير.jpg",
+                sizes: [{ size: "100 مل", price: 12 }],
+                contents:
+                ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"]
+            },
+            {
+                 id: 6,
+                name: "مجموعة عطر جوتا",
+                category: "packages",
+                image: "P/بكجات/مجموعة عطر جوتا.jpg",
+                sizes: [{ size: "100 مل", price: 12 }],
+                contents: ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"]
+            },
+            {
+                id: 7,
+                name: "مجموعة عطر ليغاسي",
+                category: "packages",
+                image: "P/بكجات/مجموعة عطر ليغاسي.jpg",
+                sizes: [{ size: "100 مل", price: 12 }],
+                contents:
+                ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"]
+            },
+            {
+                id: 8,
+                name: "مجموعة عطر فورس",
+                category: "packages",
+                image: "P/بكجات/مجموعة عطر فورس.jpg",
+                sizes: [{ size: "100 مل", price: 12 }], 
+                contents: 
+                ["عطر (100 مل)", "عطر (30 مل)", "معطر شعر", "أوفر سبري", "حقيبة"]
+            },
+            {
+                id: 9,
+                name: "سجنتشر بلاك",
+                category: "unisex",
+                image: "P/جنسين/سجنتشر بلاك.jpg",
+                sizes: [{ size: "100 مل", price: 8 }]
+            },
+            {
+                id: 10,
+                name:"سيجنتشر روز جولد",
+                category: "unisex",
+                image: "P/جنسين/سيجنتشر روز جولد.jpg",
+                sizes: [{ size: "100 مل", price: 8 }]
+            
+            },
+            {
+                id: 11,
+                name: "بلقيس",
+                category: "unisex",
+                image: "P/جنسين/بلقيس.jpg",
+                sizes: [{ size: "100 مل", price: 8 }]
+            },
+            {
+                id: 12,
+                name: "كحيلان",
+                category: "unisex",
+                image: "P/جنسين/كحيلان.jpg",
+                sizes: [{ size: "100 مل", price: 8 }]
+            },
+
         ];
 
         let cart = [];

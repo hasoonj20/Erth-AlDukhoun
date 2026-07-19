@@ -184,6 +184,26 @@
             box-shadow: 0 8px 20px rgba(58, 50, 38, 0.08);
         }
 
+        /* حاوية السعة الواحدة في أعلى اليسار بخط صغير ومستطيل مخصص */
+        .product-size-badge-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+        }
+
+        .single-size-badge {
+            background-color: var(--white);
+            color: var(--gold-dark);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border: 1px solid rgba(184, 144, 71, 0.25);
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            display: inline-block;
+        }
+
         .product-img {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -248,7 +268,7 @@
             color: var(--gold-primary);
         }
 
-        /* خيارات السعة */
+        /* خيارات السعة (النظام القديم للأحجام المتعددة) */
         .size-buttons-group {
             margin-bottom: 12px;
         }
@@ -603,7 +623,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: none; /* لمنع السحب الافتراضي للمتصفح أثناء السحب الخاص بنا */
+            touch-action: none;
         }
 
         .viewer-img {
@@ -620,7 +640,6 @@
             transform: scale(1) translateY(0px);
         }
 
-        /* عندما يقوم المستخدم بالسحب لأسفل */
         .viewer-img.dragging {
             transition: none !important;
         }
@@ -671,7 +690,6 @@
         }
         .zoom-btn:active { transform: scale(0.85); }
 
-        /* تلميح السحب للموبايل */
         .swipe-hint {
             position: absolute;
             top: 75px;
@@ -694,7 +712,7 @@
         @media (max-width: 600px) {
             .logo-title { font-size: 2.2rem; }
             .category-box { flex-grow: 1; padding: 10px 15px; }
-            .swipe-hint { display: flex; } /* يظهر فقط على الموبايل */
+            .swipe-hint { display: flex; }
         }
 
         @media (min-width: 601px) {
@@ -846,8 +864,18 @@
     <script>
         const STORE_WHATSAPP = "97332202246"; 
 
+        // مصفوفة المنتجات (تم إضافة سعات متعددة افتراضية للمنتج رقم 1 لتجربة النظام القديم)
         const products = [
-            { id: 1, name: "Crown Black", category: "unisex", image: "P/جنسين/Crown Black.jpg", sizes: [{ size: "100 مل", price: 8 }] },
+            { 
+                id: 1, 
+                name: "Crown Black", 
+                category: "unisex", 
+                image: "P/جنسين/Crown Black.jpg", 
+                sizes: [
+                    { size: "100 مل", price: 5 },
+
+                ] 
+            },
             { id: 2, name: "مجموعة سجنتشر", category: "packages", image: "P/بكجات/مجموعة سجنتشر.jpg", sizes: [{ size: "100 مل", price: 12 }] },
             { id: 3, name: "سجنتشر سيلفر", category: "men", image: "P/رجالي/سجنتشر سيلفر.jpg", sizes: [{ size: "100 مل", price: 8 }] },
             { id: 4, name: "دخون روز", category: "women", image: "P/نسائي/دخون روز.jpg", sizes: [{ size: "100 مل", price: 8 }] },
@@ -886,12 +914,23 @@
             filtered.forEach(p => {
                 const hasContents = p.contents && p.contents.length > 0;
                 
-                let sizeButtonsHTML = '';
-                if (!hasContents) {
-                    let sizeButtons = '';
+                let sizeTopBadgeHTML = '';
+                let sizeBottomButtonsHTML = '';
+
+                // فحص الفرز الذكي للسعات[cite: 1]
+                if (p.sizes.length === 1) {
+                    // سعة واحدة فقط: يظهر مستطيل السعة الصغير في أعلى يسار كرت المنتج[cite: 1]
+                    sizeTopBadgeHTML = `
+                        <div class="product-size-badge-container">
+                            <span class="single-size-badge">${p.sizes[0].size}</span>
+                        </div>
+                    `;
+                } else if (p.sizes.length > 1 && !hasContents) {
+                    // سعات متعددة: يعود للنظام القديم (أزرار اختيار راديو بالأسفل)[cite: 1]
+                    let sizeRadioButtons = '';
                     p.sizes.forEach((s, index) => {
                         const checked = index === 0 ? 'checked' : '';
-                        sizeButtons += `
+                        sizeRadioButtons += `
                             <label class="size-btn-label">
                                 <input type="radio" name="size-prod-${p.id}" value="${index}" ${checked} onchange="updatePriceDisplay(${p.id}, ${s.price})">
                                 <span class="size-btn-custom">${s.size}</span>
@@ -899,11 +938,11 @@
                         `;
                     });
                     
-                    sizeButtonsHTML = `
+                    sizeBottomButtonsHTML = `
                         <div class="size-buttons-group">
                             <label class="section-label">اختر السعة:</label>
                             <div class="size-options-wrapper">
-                                ${sizeButtons}
+                                ${sizeRadioButtons}
                             </div>
                         </div>
                     `;
@@ -916,6 +955,7 @@
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
+                    ${sizeTopBadgeHTML}
                     <div class="product-img" onclick="openImageViewer('${p.image}')">
                         <img src="${p.image}" alt="${p.name}" loading="lazy">
                     </div>
@@ -924,7 +964,7 @@
                             <div class="product-title">${p.name}</div>
                             ${contentsLinkHTML}
                         </div>
-                        ${sizeButtonsHTML}
+                        ${sizeBottomButtonsHTML}
                         <div class="product-bottom">
                             <span class="product-price" id="price-display-${p.id}">${p.sizes[0].price} د.ب</span>
                             <button class="add-to-cart-btn" id="btn-add-${p.id}" onclick="addToCart(${p.id}, this); event.stopPropagation();">إضافة للسلة</button>
@@ -976,10 +1016,15 @@
 
         function addToCart(productId, btnElement) {
             const product = products.find(p => p.id === productId);
-            const selectedRadio = document.querySelector(`input[name="size-prod-${productId}"]:checked`);
-            const selectedIndex = selectedRadio ? selectedRadio.value : 0;
-            const selectedSizeInfo = product.sizes[selectedIndex];
+            let selectedIndex = 0;
 
+            // جلب السعة المختارة بناءً على النظام الفعال للمنتج[cite: 1]
+            if (product.sizes.length > 1) {
+                const selectedRadio = document.querySelector(`input[name="size-prod-${productId}"]:checked`);
+                selectedIndex = selectedRadio ? selectedRadio.value : 0;
+            }
+            
+            const selectedSizeInfo = product.sizes[selectedIndex];
             const existingItem = cart.find(item => item.id === productId && item.size === selectedSizeInfo.size);
 
             if(existingItem) {
@@ -1016,7 +1061,6 @@
             }, 500);
         }
 
-        /* [إضافة ميزة]: تحسين التحكم في الكمية داخل السلة */
         function updateCartFloatingUI() {
             const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
             document.getElementById('cart-count').innerText = totalQty;
@@ -1052,7 +1096,6 @@
             document.getElementById('cart-total').innerText = `${totalCost} د.ب`;
         }
 
-        /* دالة زيادة ونقصان الكمية وحذف المنتج تلقائياً عند وصوله لـ 0 */
         function updateQty(index, change) {
             cart[index].qty += change;
             if (cart[index].qty <= 0) {
@@ -1138,13 +1181,11 @@
             viewerImg.style.transform = `scale(1) translateY(0px)`;
         }
 
-        /* [إضافة ميزة]: تحسين تجربة عارض الصور على الموبايل عبر خاصية السحب للإغلاق Touch Swipe Down */
         let startY = 0;
         let currentY = 0;
         let isDragging = false;
 
         viewerContainer.addEventListener('touchstart', (e) => {
-            // نُفعل السحب فقط إذا لم تكن الصورة مكبرة (Zoom) لتفادي التداخل
             if (currentScale > 1) return; 
             startY = e.touches[0].clientY;
             isDragging = true;
@@ -1155,10 +1196,7 @@
             if (!isDragging) return;
             currentY = e.touches[0].clientY;
             let diffY = currentY - startY;
-
-            // نسمح بالسحب للأسفل فقط (قيمة موجبة لـ diffY)
             if (diffY > 0) {
-                // تقليل سرعة الحركة قليلاً لإعطاء شعور بالثقل والمرونة (Elastic Effect)
                 applyImageTransform(diffY * 0.8);
             }
         }, { passive: true });
@@ -1170,18 +1208,15 @@
 
             let finalDiffY = currentY - startY;
 
-            // إذا سحب المستخدم مسافة أكثر من 120 بكسل، يتم إغلاق النافذة
             if (finalDiffY > 120 && currentY !== 0) {
                 toggleImageViewer(false);
             } else {
-                // إعادة الصورة لمكانها الطبيعي بتأثير سلس إذا لم يتخطَ مسافة الإغلاق
                 viewerImg.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                 resetImageTransform();
                 setTimeout(() => {
                     viewerImg.style.transition = '';
                 }, 300);
             }
-            // إعادة تصفير القيم
             startY = 0;
             currentY = 0;
         });

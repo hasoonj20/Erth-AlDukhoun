@@ -20,6 +20,7 @@
             --success-green: #2ec4b6;
             --danger-red: #d9534f;
             --edit-blue: #3182ce;
+            --out-of-stock: #718096;
             --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -195,6 +196,20 @@
             border-radius: 6px;
         }
 
+        /* شارة نفدت الكمية على الصورة */
+        .out-of-stock-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(113, 128, 150, 0.9);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            z-index: 10;
+        }
+
         .product-img {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -203,13 +218,18 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            cursor: pointer;
+            position: relative;
         }
 
         .product-img img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .product-card.out-of-stock .product-img img {
+            filter: grayscale(80%);
+            opacity: 0.7;
         }
 
         .product-info {
@@ -233,7 +253,7 @@
             color: var(--text-dark);
         }
 
-        /* زر وسهم محتويات المجموعة المنسدلة */
+        /* زر عرض محتويات المجموعة */
         .package-toggle-btn {
             background: var(--bg-color);
             color: var(--gold-dark);
@@ -246,51 +266,15 @@
             margin-bottom: 8px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
+            gap: 6px;
             width: 100%;
             transition: var(--transition-smooth);
         }
 
         .package-toggle-btn:hover {
             border-color: var(--gold-primary);
-        }
-
-        .package-toggle-btn i.fa-chevron-down {
-            font-size: 0.7rem;
-            transition: transform 0.3s ease;
-        }
-
-        .package-toggle-btn.active i.fa-chevron-down {
-            transform: rotate(180deg);
-        }
-
-        /* القائمة المنسدلة لمحتويات المجموعة */
-        .package-contents-dropdown {
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease;
-            background: #faf7f2;
-            border-radius: 6px;
-            border-right: 3px solid var(--gold-primary);
-            font-size: 0.8rem;
-            color: #555;
-            margin-bottom: 0;
-        }
-
-        .package-contents-dropdown.active {
-            max-height: 200px;
-            opacity: 1;
-            padding: 8px 12px;
-            margin-bottom: 10px;
-        }
-
-        .package-contents-dropdown ul {
-            padding-right: 15px;
-        }
-
-        .package-contents-dropdown li {
-            margin-bottom: 4px;
+            background: #f3ece0;
         }
 
         .product-bottom {
@@ -317,6 +301,12 @@
             font-size: 0.85rem;
             width: 100%;
             transition: var(--transition-smooth);
+        }
+
+        .add-to-cart-btn.disabled {
+            background: var(--out-of-stock);
+            cursor: not-allowed;
+            opacity: 0.8;
         }
 
         /* أزرار الإدارة داخل المنتجات */
@@ -388,7 +378,7 @@
             height: 100%;
             background: rgba(0,0,0,0.5);
             display: flex;
-            align-items: flex-end;
+            align-items: flex-end; /* للأسفل في الهواتف بشكل افتراضي */
             justify-content: center;
             z-index: 1000;
             opacity: 0;
@@ -409,6 +399,12 @@
             max-height: 85vh;
             overflow-y: auto;
             position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .cart-modal.active .cart-content {
+            transform: translateY(0);
         }
 
         .close-cart {
@@ -418,6 +414,26 @@
             font-size: 1.3rem;
             cursor: pointer;
             color: #aaa;
+        }
+
+        /* قائمة محتويات البكج داخل النوافذ المنبثقة */
+        .pkg-contents-list {
+            list-style: none;
+            padding: 10px 0;
+        }
+
+        .pkg-contents-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+        }
+
+        .pkg-contents-list li i {
+            color: var(--gold-primary);
         }
 
         /* نماذج لوحة التحكم */
@@ -443,6 +459,17 @@
             outline: none;
         }
 
+        .checkbox-label {
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            width: auto !important;
+        }
+
         .admin-submit-btn {
             background: var(--gold-primary);
             color: white;
@@ -464,13 +491,16 @@
             border: 1px solid #ddd;
         }
 
+        /* تخصيص للكمبيوتر (الشاشات الكبيرة) */
         @media (min-width: 601px) {
             .products-grid {
                 grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
                 gap: 20px;
                 padding: 0 20px;
             }
-            .cart-modal { align-items: center; }
+            .cart-modal { 
+                align-items: center; /* تظهر في النصف بالظبط للكمبيوتر */
+            }
             .cart-content {
                 width: 90%;
                 max-width: 500px;
@@ -520,6 +550,17 @@
     <main class="products-grid" id="products-container">
         <!-- يتم عرض المنتجات هنا -->
     </main>
+
+    <!-- النافذة المنبثقة لمحتويات البكج (Modal وسط الشاشة للكمبيوتر / أسفل للهاتف) -->
+    <div class="cart-modal" id="package-modal">
+        <div class="cart-content">
+            <i class="fa-solid fa-xmark close-cart" onclick="closePackageModal()"></i>
+            <h3 id="pkg-modal-title" style="margin-bottom: 10px; color: var(--gold-dark);">محتويات المجموعة</h3>
+            <ul class="pkg-contents-list" id="pkg-modal-list">
+                <!-- المكونات تعبأ هنا -->
+            </ul>
+        </div>
+    </div>
 
     <!-- السلة العائمة -->
     <div class="cart-floating-btn" id="cart-floating-btn" onclick="toggleCart(true)">
@@ -596,6 +637,13 @@
                     <input type="text" id="new-prod-contents" placeholder="عطر 100مل, عطر 30مل, معطر شعر">
                 </div>
 
+                <div class="admin-form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="new-prod-out-of-stock">
+                        <span>نفدت الكمية (غير متوفر)</span>
+                    </label>
+                </div>
+
                 <button type="submit" class="admin-submit-btn">نشر المنتج في المتجر</button>
             </form>
         </div>
@@ -650,6 +698,13 @@
                     <input type="text" id="edit-prod-contents">
                 </div>
 
+                <div class="admin-form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="edit-prod-out-of-stock">
+                        <span>نفدت الكمية (غير متوفر)</span>
+                    </label>
+                </div>
+
                 <button type="submit" class="admin-submit-btn" style="background: var(--edit-blue);">حفظ التعديلات</button>
             </form>
         </div>
@@ -700,6 +755,8 @@
     <script>
         const STORE_WHATSAPP = "97336825523";
         let defaultProducts = [
+            { id: 1, name: "Crown Black", category: "unisex", image: "P/جنسين/Crown Black.jpg", sizes: [{ size: "100 مل", price: 5 }], isOutOfStock: false },
+            { id: 2, name: "مجموعة سجنتشر", category: "packages", image: "P/بكجات/مجموعة سجنتشر.jpg", sizes: [{ price: 12 }], contents: ["عطر سجنتشر أول 100 مل", "عطر سجنتشر ثاني 100 مل", "عطر سجنتشر ثالث 100 مل", "عطر سجنتشر رابع 100 مل"], isOutOfStock: false }
         ];
 
         let cart = [];
@@ -733,12 +790,18 @@
 
             filtered.forEach((p, idx) => {
                 const isPackage = (p.category === 'packages');
+                const isOutOfStock = p.isOutOfStock || false;
 
-                // عدم إظهار شارة السعة على الصورة للبكجات
+                // عدم إظهار شارة السعة للبكج
                 const sizeBadgeHTML = (!isPackage && p.sizes && p.sizes[0] && p.sizes[0].size) 
                     ? `<div class="product-size-badge-container">
                         <span class="single-size-badge">${p.sizes[0].size}</span>
                        </div>` 
+                    : '';
+
+                // شارة نفدت الكمية
+                const outOfStockBadgeHTML = isOutOfStock 
+                    ? `<div class="out-of-stock-badge">نفدت الكمية</div>` 
                     : '';
 
                 // أزرار الإدارة
@@ -749,27 +812,27 @@
                       </div>` 
                     : '';
 
-                // زر وقائمة المحتويات المنسدلة للبكج
+                // زر فتح النافذة المنبثقة لمحتويات البكج
                 let packageContentsHTML = '';
                 if (p.contents && p.contents.length > 0) {
-                    const dropdownId = `pkg-desc-${p.firebaseKey || p.id || idx}`;
+                    const prodKey = p.firebaseKey || p.id || idx;
                     packageContentsHTML = `
-                        <button class="package-toggle-btn" onclick="togglePackageDropdown(this, '${dropdownId}')">
-                            <span><i class="fa-solid fa-box-open" style="margin-left: 5px;"></i> محتويات المجموعة</span>
-                            <i class="fa-solid fa-chevron-down"></i>
+                        <button class="package-toggle-btn" onclick="openPackageModal('${prodKey}')">
+                            <i class="fa-solid fa-box-open"></i> محتويات المجموعة
                         </button>
-                        <div class="package-contents-dropdown" id="${dropdownId}">
-                            <ul>
-                                ${p.contents.map(item => `<li>${item}</li>`).join('')}
-                            </ul>
-                        </div>
                     `;
                 }
 
+                // زر إضافة للسلة أو زر نفدت الكمية
+                const cartBtnHTML = isOutOfStock 
+                    ? `<button class="add-to-cart-btn disabled" disabled>غير متوفر</button>` 
+                    : `<button class="add-to-cart-btn" onclick="addToCart('${p.name}', ${p.sizes[0].price}, '${(!isPackage && p.sizes[0].size) ? p.sizes[0].size : ''}')">إضافة للسلة</button>`;
+
                 const card = document.createElement('div');
-                card.className = 'product-card';
+                card.className = `product-card ${isOutOfStock ? 'out-of-stock' : ''}`;
                 card.innerHTML = `
                     ${sizeBadgeHTML}
+                    ${outOfStockBadgeHTML}
                     <div class="product-img">
                         <img src="${p.image}" alt="${p.name}" loading="lazy">
                     </div>
@@ -780,7 +843,7 @@
                         ${packageContentsHTML}
                         <div class="product-bottom">
                             <span class="product-price">${p.sizes[0].price} د.ب</span>
-                            <button class="add-to-cart-btn" onclick="addToCart('${p.name}', ${p.sizes[0].price}, '${(!isPackage && p.sizes[0].size) ? p.sizes[0].size : ''}')">إضافة للسلة</button>
+                            ${cartBtnHTML}
                             ${adminBtnsHTML}
                         </div>
                     </div>
@@ -789,13 +852,26 @@
             });
         }
 
-        /* التحكم في فتح وإغلاق القائمة المنسدلة للمجموعة */
-        function togglePackageDropdown(btn, elementId) {
-            btn.classList.toggle('active');
-            const dropdown = document.getElementById(elementId);
-            if(dropdown) {
-                dropdown.classList.toggle('active');
+        /* فتح النافذة المنبثقة لمحتويات البكج */
+        function openPackageModal(prodKey) {
+            const allProducts = getAllProducts();
+            const product = allProducts.find(p => p.firebaseKey === prodKey || p.id == prodKey);
+            
+            if (product && product.contents) {
+                document.getElementById('pkg-modal-title').innerText = `محتويات ${product.name}`;
+                const listEl = document.getElementById('pkg-modal-list');
+                listEl.innerHTML = '';
+
+                product.contents.forEach(item => {
+                    listEl.innerHTML += `<li><i class="fa-solid fa-check"></i> ${item}</li>`;
+                });
+
+                document.getElementById('package-modal').classList.add('active');
             }
+        }
+
+        function closePackageModal() {
+            document.getElementById('package-modal').classList.remove('active');
         }
 
         /* الإدارة وكلمة المرور */
@@ -840,6 +916,7 @@
             const price = parseFloat(document.getElementById('new-prod-price').value);
             const size = document.getElementById('new-prod-size').value || "";
             const contentsRaw = document.getElementById('new-prod-contents').value;
+            const isOutOfStock = document.getElementById('new-prod-out-of-stock').checked;
             const imageFile = document.getElementById('new-prod-image').files[0];
 
             if(!imageFile) return alert("يرجى اختيار صورة للمنتج");
@@ -851,7 +928,8 @@
                     category: category,
                     image: event.target.result,
                     sizes: [{ size: size, price: price }],
-                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : []
+                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : [],
+                    isOutOfStock: isOutOfStock
                 };
 
                 if(window.productsRef) {
@@ -877,6 +955,7 @@
             document.getElementById('edit-prod-price').value = product.sizes[0].price;
             document.getElementById('edit-prod-size').value = product.sizes[0].size || '';
             document.getElementById('edit-prod-contents').value = product.contents ? product.contents.join(', ') : '';
+            document.getElementById('edit-prod-out-of-stock').checked = product.isOutOfStock || false;
             document.getElementById('edit-prod-old-image').value = product.image;
             document.getElementById('edit-prod-preview').src = product.image;
 
@@ -892,6 +971,7 @@
             const price = parseFloat(document.getElementById('edit-prod-price').value);
             const size = document.getElementById('edit-prod-size').value;
             const contentsRaw = document.getElementById('edit-prod-contents').value;
+            const isOutOfStock = document.getElementById('edit-prod-out-of-stock').checked;
             const oldImage = document.getElementById('edit-prod-old-image').value;
             const newImageFile = document.getElementById('edit-prod-image').files[0];
 
@@ -901,7 +981,8 @@
                     category: category,
                     image: imageToSave,
                     sizes: [{ size: size, price: price }],
-                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : []
+                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : [],
+                    isOutOfStock: isOutOfStock
                 };
 
                 const itemRef = window.ref(window.db, 'products/' + key);

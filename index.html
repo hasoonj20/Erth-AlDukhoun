@@ -233,19 +233,48 @@
             color: var(--text-dark);
         }
 
-        /* تنسيق قائمة محتويات البكج */
-        .package-contents-list {
-            margin: 6px 0 12px 0;
-            padding-right: 18px;
-            font-size: 0.8rem;
-            color: #666;
-            background: #faf7f2;
-            padding: 8px 18px 8px 8px;
+        /* زر عرض محتويات البكج */
+        .package-toggle-btn {
+            background: transparent;
+            color: var(--gold-dark);
+            border: 1px solid rgba(184, 144, 71, 0.4);
+            padding: 4px 8px;
             border-radius: 6px;
-            border-right: 2px solid var(--gold-primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: var(--transition-smooth);
         }
 
-        .package-contents-list li {
+        .package-toggle-btn:hover {
+            background: var(--bg-color);
+        }
+
+        /* قائمة المحتويات المخفية */
+        .package-contents-dropdown {
+            display: none;
+            background: #faf7f2;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-right: 2px solid var(--gold-primary);
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        .package-contents-dropdown.active {
+            display: block;
+        }
+
+        .package-contents-dropdown ul {
+            padding-right: 15px;
+        }
+
+        .package-contents-dropdown li {
             margin-bottom: 3px;
         }
 
@@ -538,7 +567,7 @@
                 </div>
 
                 <div class="admin-form-group">
-                    <label>السعة / الحجم:</label>
+                    <label>السعة / الحجم (غير مطلوبة للبكجات):</label>
                     <input type="text" id="new-prod-size" value="100 مل" placeholder="100 مل">
                 </div>
 
@@ -589,7 +618,7 @@
 
                 <div class="admin-form-group">
                     <label>السعة / الحجم:</label>
-                    <input type="text" id="edit-prod-size" required>
+                    <input type="text" id="edit-prod-size">
                 </div>
 
                 <div class="admin-form-group">
@@ -611,12 +640,11 @@
         </div>
     </div>
 
-    <!-- استدعاء Firebase SDK v9 (Realtime Database) -->
+    <!-- استدعاء Firebase SDK v9 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, push, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // إعدادات مشروع Firebase الخاص بك
         const firebaseConfig = {
           apiKey: "AIzaSyDZf8pfXgK2gLWccHHsTJmQylOM1Ptt6SY",
           authDomain: "erth-aldukhoun.firebaseapp.com",
@@ -638,7 +666,6 @@
         window.remove = remove;
         window.ref = ref;
 
-        // الاستماع المباشر للتغييرات
         onValue(productsRef, (snapshot) => {
             const data = snapshot.val();
             let firebaseProducts = [];
@@ -691,7 +718,17 @@
                 return;
             }
 
-            filtered.forEach(p => {
+            filtered.forEach((p, idx) => {
+                const isPackage = (p.category === 'packages');
+
+                // عدم إظهار شارة السعة إذا كان المنتج بكج
+                const sizeBadgeHTML = (!isPackage && p.sizes && p.sizes[0] && p.sizes[0].size) 
+                    ? `<div class="product-size-badge-container">
+                        <span class="single-size-badge">${p.sizes[0].size}</span>
+                       </div>` 
+                    : '';
+
+                // أزرار الإدارة
                 const adminBtnsHTML = (isAdminLoggedIn && p.firebaseKey) 
                     ? `<div class="admin-action-btns">
                         <button class="edit-prod-btn" onclick="openEditModal('${p.firebaseKey}')">تعديل <i class="fa-solid fa-pen"></i></button>
@@ -699,22 +736,26 @@
                       </div>` 
                     : '';
 
-                // تجهيز قائمة المحتويات إن وجدت
-                let contentsHTML = '';
+                // تجهيز زر وقائمة محتويات البكج
+                let packageContentsHTML = '';
                 if (p.contents && p.contents.length > 0) {
-                    contentsHTML = `<ul class="package-contents-list">`;
-                    p.contents.forEach(item => {
-                        contentsHTML += `<li>${item}</li>`;
-                    });
-                    contentsHTML += `</ul>`;
+                    const dropdownId = `pkg-desc-${p.firebaseKey || p.id || idx}`;
+                    packageContentsHTML = `
+                        <button class="package-toggle-btn" onclick="togglePackageContents('${dropdownId}')">
+                            <i class="fa-solid fa-box-open"></i> عرض محتويات البكج
+                        </button>
+                        <div class="package-contents-dropdown" id="${dropdownId}">
+                            <ul>
+                                ${p.contents.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
                 }
 
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
-                    <div class="product-size-badge-container">
-                        <span class="single-size-badge">${p.sizes[0].size}</span>
-                    </div>
+                    ${sizeBadgeHTML}
                     <div class="product-img">
                         <img src="${p.image}" alt="${p.name}" loading="lazy">
                     </div>
@@ -722,16 +763,24 @@
                         <div class="product-header-wrapper">
                             <div class="product-title">${p.name}</div>
                         </div>
-                        ${contentsHTML}
+                        ${packageContentsHTML}
                         <div class="product-bottom">
                             <span class="product-price">${p.sizes[0].price} د.ب</span>
-                            <button class="add-to-cart-btn" onclick="addToCart('${p.name}', ${p.sizes[0].price}, '${p.sizes[0].size}')">إضافة للسلة</button>
+                            <button class="add-to-cart-btn" onclick="addToCart('${p.name}', ${p.sizes[0].price}, '${p.sizes[0].size || ''}')">إضافة للسلة</button>
                             ${adminBtnsHTML}
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
+        }
+
+        /* فتح/إغلاق قائمة محتويات البكج */
+        function togglePackageContents(elementId) {
+            const el = document.getElementById(elementId);
+            if(el) {
+                el.classList.toggle('active');
+            }
         }
 
         /* الإدارة وكلمة المرور */
@@ -802,7 +851,7 @@
             reader.readAsDataURL(imageFile);
         }
 
-        /* فتح نافذة التعديل وتعبئة البيانات للحالية */
+        /* فتح نافذة التعديل */
         function openEditModal(key) {
             const product = window.dbProducts.find(p => p.firebaseKey === key);
             if(!product) return;
@@ -811,7 +860,7 @@
             document.getElementById('edit-prod-name').value = product.name;
             document.getElementById('edit-prod-category').value = product.category;
             document.getElementById('edit-prod-price').value = product.sizes[0].price;
-            document.getElementById('edit-prod-size').value = product.sizes[0].size;
+            document.getElementById('edit-prod-size').value = product.sizes[0].size || '';
             document.getElementById('edit-prod-contents').value = product.contents ? product.contents.join(', ') : '';
             document.getElementById('edit-prod-old-image').value = product.image;
             document.getElementById('edit-prod-preview').src = product.image;
@@ -819,7 +868,7 @@
             document.getElementById('edit-product-modal').classList.add('active');
         }
 
-        /* حفظ التعديلات وإرسالها لـ Firebase */
+        /* حفظ التعديلات */
         function handleUpdateProduct(e) {
             e.preventDefault();
             const key = document.getElementById('edit-prod-key').value;
@@ -879,8 +928,9 @@
             let total = 0;
             cart.forEach(item => {
                 total += item.price;
+                const sizeText = item.size ? ` (${item.size})` : '';
                 list.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span>${item.name} (${item.size})</span>
+                    <span>${item.name}${sizeText}</span>
                     <span>${item.price} د.ب</span>
                 </div>`;
             });

@@ -233,6 +233,22 @@
             color: var(--text-dark);
         }
 
+        /* تنسيق قائمة محتويات البكج */
+        .package-contents-list {
+            margin: 6px 0 12px 0;
+            padding-right: 18px;
+            font-size: 0.8rem;
+            color: #666;
+            background: #faf7f2;
+            padding: 8px 18px 8px 8px;
+            border-radius: 6px;
+            border-right: 2px solid var(--gold-primary);
+        }
+
+        .package-contents-list li {
+            margin-bottom: 3px;
+        }
+
         .product-bottom {
             margin-top: auto;
             display: flex;
@@ -601,15 +617,15 @@
         import { getDatabase, ref, push, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
         // إعدادات مشروع Firebase الخاص بك
-const firebaseConfig = {
-  apiKey: "AIzaSyDZf8pfXgK2gLWccHHsTJmQylOM1Ptt6SY",
-  authDomain: "erth-aldukhoun.firebaseapp.com",
-  databaseURL: "https://erth-aldukhoun-default-rtdb.firebaseio.com",
-  projectId: "erth-aldukhoun",
-  storageBucket: "erth-aldukhoun.firebasestorage.app",
-  messagingSenderId: "389135335660",
-  appId: "1:389135335660:web:ef955aba709cc7796f65c9"
-};
+        const firebaseConfig = {
+          apiKey: "AIzaSyDZf8pfXgK2gLWccHHsTJmQylOM1Ptt6SY",
+          authDomain: "erth-aldukhoun.firebaseapp.com",
+          databaseURL: "https://erth-aldukhoun-default-rtdb.firebaseio.com",
+          projectId: "erth-aldukhoun",
+          storageBucket: "erth-aldukhoun.firebasestorage.app",
+          messagingSenderId: "389135335660",
+          appId: "1:389135335660:web:ef955aba709cc7796f65c9"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -683,6 +699,16 @@ const firebaseConfig = {
                       </div>` 
                     : '';
 
+                // تجهيز قائمة المحتويات إن وجدت
+                let contentsHTML = '';
+                if (p.contents && p.contents.length > 0) {
+                    contentsHTML = `<ul class="package-contents-list">`;
+                    p.contents.forEach(item => {
+                        contentsHTML += `<li>${item}</li>`;
+                    });
+                    contentsHTML += `</ul>`;
+                }
+
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
@@ -696,6 +722,7 @@ const firebaseConfig = {
                         <div class="product-header-wrapper">
                             <div class="product-title">${p.name}</div>
                         </div>
+                        ${contentsHTML}
                         <div class="product-bottom">
                             <span class="product-price">${p.sizes[0].price} د.ب</span>
                             <button class="add-to-cart-btn" onclick="addToCart('${p.name}', ${p.sizes[0].price}, '${p.sizes[0].size}')">إضافة للسلة</button>
@@ -760,7 +787,7 @@ const firebaseConfig = {
                     category: category,
                     image: event.target.result,
                     sizes: [{ size: size, price: price }],
-                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()) : []
+                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : []
                 };
 
                 if(window.productsRef) {
@@ -810,7 +837,7 @@ const firebaseConfig = {
                     category: category,
                     image: imageToSave,
                     sizes: [{ size: size, price: price }],
-                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()) : []
+                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : []
                 };
 
                 const itemRef = window.ref(window.db, 'products/' + key);

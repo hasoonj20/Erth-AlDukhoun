@@ -233,41 +233,56 @@
             color: var(--text-dark);
         }
 
-        /* زر عرض محتويات البكج */
+        /* زر وسهم محتويات المجموعة المنسدلة */
         .package-toggle-btn {
-            background: transparent;
+            background: var(--bg-color);
             color: var(--gold-dark);
-            border: 1px solid rgba(184, 144, 71, 0.4);
-            padding: 4px 8px;
+            border: 1px solid rgba(184, 144, 71, 0.3);
+            padding: 6px 10px;
             border-radius: 6px;
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             font-weight: 600;
             cursor: pointer;
             margin-bottom: 8px;
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: space-between;
+            width: 100%;
             transition: var(--transition-smooth);
         }
 
         .package-toggle-btn:hover {
-            background: var(--bg-color);
+            border-color: var(--gold-primary);
         }
 
-        /* قائمة المحتويات المخفية */
+        .package-toggle-btn i.fa-chevron-down {
+            font-size: 0.7rem;
+            transition: transform 0.3s ease;
+        }
+
+        .package-toggle-btn.active i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        /* القائمة المنسدلة لمحتويات المجموعة */
         .package-contents-dropdown {
-            display: none;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease;
             background: #faf7f2;
-            padding: 8px 12px;
             border-radius: 6px;
-            border-right: 2px solid var(--gold-primary);
-            margin-bottom: 10px;
+            border-right: 3px solid var(--gold-primary);
             font-size: 0.8rem;
             color: #555;
+            margin-bottom: 0;
         }
 
         .package-contents-dropdown.active {
-            display: block;
+            max-height: 200px;
+            opacity: 1;
+            padding: 8px 12px;
+            margin-bottom: 10px;
         }
 
         .package-contents-dropdown ul {
@@ -275,7 +290,7 @@
         }
 
         .package-contents-dropdown li {
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .product-bottom {
@@ -685,8 +700,6 @@
     <script>
         const STORE_WHATSAPP = "97336825523";
         let defaultProducts = [
-            { id: 1, name: "Crown Black", category: "unisex", image: "P/جنسين/Crown Black.jpg", sizes: [{ size: "100 مل", price: 5 }] },
-            { id: 2, name: "مجموعة سجنتشر", category: "packages", image: "P/بكجات/مجموعة سجنتشر.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["طقم عطور سجنتشر مكون من 4 عبوات بسعة 100 مل"] }
         ];
 
         let cart = [];
@@ -721,7 +734,7 @@
             filtered.forEach((p, idx) => {
                 const isPackage = (p.category === 'packages');
 
-                // عدم إظهار شارة السعة إذا كان المنتج بكج
+                // عدم إظهار شارة السعة على الصورة للبكجات
                 const sizeBadgeHTML = (!isPackage && p.sizes && p.sizes[0] && p.sizes[0].size) 
                     ? `<div class="product-size-badge-container">
                         <span class="single-size-badge">${p.sizes[0].size}</span>
@@ -736,13 +749,14 @@
                       </div>` 
                     : '';
 
-                // تجهيز زر وقائمة محتويات البكج
+                // زر وقائمة المحتويات المنسدلة للبكج
                 let packageContentsHTML = '';
                 if (p.contents && p.contents.length > 0) {
                     const dropdownId = `pkg-desc-${p.firebaseKey || p.id || idx}`;
                     packageContentsHTML = `
-                        <button class="package-toggle-btn" onclick="togglePackageContents('${dropdownId}')">
-                            <i class="fa-solid fa-box-open"></i> عرض محتويات البكج
+                        <button class="package-toggle-btn" onclick="togglePackageDropdown(this, '${dropdownId}')">
+                            <span><i class="fa-solid fa-box-open" style="margin-left: 5px;"></i> محتويات المجموعة</span>
+                            <i class="fa-solid fa-chevron-down"></i>
                         </button>
                         <div class="package-contents-dropdown" id="${dropdownId}">
                             <ul>
@@ -766,7 +780,7 @@
                         ${packageContentsHTML}
                         <div class="product-bottom">
                             <span class="product-price">${p.sizes[0].price} د.ب</span>
-                            <button class="add-to-cart-btn" onclick="addToCart('${p.name}', ${p.sizes[0].price}, '${p.sizes[0].size || ''}')">إضافة للسلة</button>
+                            <button class="add-to-cart-btn" onclick="addToCart('${p.name}', ${p.sizes[0].price}, '${(!isPackage && p.sizes[0].size) ? p.sizes[0].size : ''}')">إضافة للسلة</button>
                             ${adminBtnsHTML}
                         </div>
                     </div>
@@ -775,11 +789,12 @@
             });
         }
 
-        /* فتح/إغلاق قائمة محتويات البكج */
-        function togglePackageContents(elementId) {
-            const el = document.getElementById(elementId);
-            if(el) {
-                el.classList.toggle('active');
+        /* التحكم في فتح وإغلاق القائمة المنسدلة للمجموعة */
+        function togglePackageDropdown(btn, elementId) {
+            btn.classList.toggle('active');
+            const dropdown = document.getElementById(elementId);
+            if(dropdown) {
+                dropdown.classList.toggle('active');
             }
         }
 
@@ -823,7 +838,7 @@
             const name = document.getElementById('new-prod-name').value;
             const category = document.getElementById('new-prod-category').value;
             const price = parseFloat(document.getElementById('new-prod-price').value);
-            const size = document.getElementById('new-prod-size').value || "100 مل";
+            const size = document.getElementById('new-prod-size').value || "";
             const contentsRaw = document.getElementById('new-prod-contents').value;
             const imageFile = document.getElementById('new-prod-image').files[0];
 

@@ -19,6 +19,7 @@
             --white: #ffffff;
             --success-green: #2ec4b6;
             --danger-red: #d9534f;
+            --edit-blue: #3182ce;
             --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -232,16 +233,6 @@
             color: var(--text-dark);
         }
 
-        .package-contents-link {
-            font-size: 0.75rem;
-            color: var(--gold-dark);
-            background: none;
-            border: none;
-            cursor: pointer;
-            text-decoration: underline;
-            font-weight: 600;
-        }
-
         .product-bottom {
             margin-top: auto;
             display: flex;
@@ -268,8 +259,22 @@
             transition: var(--transition-smooth);
         }
 
-        .add-to-cart-btn.added {
-            background-color: var(--success-green) !important;
+        /* أزرار الإدارة داخل المنتجات */
+        .admin-action-btns {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .edit-prod-btn {
+            background: var(--edit-blue);
+            color: white;
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            flex: 1;
         }
 
         .delete-prod-btn {
@@ -280,8 +285,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.75rem;
-            margin-top: 5px;
-            display: none; /* يظهر فقط عند تفعيل وضع الأدمن */
+            flex: 1;
         }
 
         /* السلة العائمة */
@@ -389,6 +393,15 @@
             font-weight: bold;
             cursor: pointer;
             font-size: 1rem;
+        }
+
+        .image-preview-sm {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
         }
 
         @media (min-width: 601px) {
@@ -528,12 +541,66 @@
         </div>
     </div>
 
+    <!-- نافذة تعديل منتج موجود -->
+    <div class="cart-modal" id="edit-product-modal">
+        <div class="cart-content">
+            <i class="fa-solid fa-xmark close-cart" onclick="closeEditModal()"></i>
+            <h3 style="margin-bottom: 15px; color: var(--gold-dark);">تعديل بيانات المنتج</h3>
+            
+            <form id="edit-product-form" onsubmit="handleUpdateProduct(event)">
+                <input type="hidden" id="edit-prod-key">
+                <input type="hidden" id="edit-prod-old-image">
+
+                <div class="admin-form-group">
+                    <label>اسم المنتج:</label>
+                    <input type="text" id="edit-prod-name" required>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>التصنيف:</label>
+                    <select id="edit-prod-category" required>
+                        <option value="unisex">الجنسين</option>
+                        <option value="men">رجالي</option>
+                        <option value="women">نسائي</option>
+                        <option value="packages">بكجات</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>السعر (د.ب):</label>
+                    <input type="number" step="0.1" id="edit-prod-price" required>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>السعة / الحجم:</label>
+                    <input type="text" id="edit-prod-size" required>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>تغيير الصورة (اتركها فارغة للإبقاء على الصورة الحالية):</label>
+                    <input type="file" id="edit-prod-image" accept="image/*">
+                    <div>
+                        <small style="color:#777;">الصورة الحالية:</small><br>
+                        <img id="edit-prod-preview" class="image-preview-sm" src="" alt="preview">
+                    </div>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>محتويات البكج (اختياري - فاصلة بين العناصر):</label>
+                    <input type="text" id="edit-prod-contents">
+                </div>
+
+                <button type="submit" class="admin-submit-btn" style="background: var(--edit-blue);">حفظ التعديلات</button>
+            </form>
+        </div>
+    </div>
+
     <!-- استدعاء Firebase SDK v9 (Realtime Database) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getDatabase, ref, push, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // إعدادات مشروع Firebase الخاصة بك
+        // إعدادات مشروع Firebase الخاص بك
 const firebaseConfig = {
   apiKey: "AIzaSyDZf8pfXgK2gLWccHHsTJmQylOM1Ptt6SY",
   authDomain: "erth-aldukhoun.firebaseapp.com",
@@ -544,7 +611,6 @@ const firebaseConfig = {
   appId: "1:389135335660:web:ef955aba709cc7796f65c9"
 };
 
-        // تهيئة الفايربيس
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const productsRef = ref(db, 'products');
@@ -552,10 +618,11 @@ const firebaseConfig = {
         window.db = db;
         window.productsRef = productsRef;
         window.push = push;
+        window.update = update;
         window.remove = remove;
         window.ref = ref;
 
-        // الاستماع المباشر للتغييرات في قاعدة البيانات
+        // الاستماع المباشر للتغييرات
         onValue(productsRef, (snapshot) => {
             const data = snapshot.val();
             let firebaseProducts = [];
@@ -575,6 +642,8 @@ const firebaseConfig = {
     <script>
         const STORE_WHATSAPP = "97336825523";
         let defaultProducts = [
+            { id: 1, name: "Crown Black", category: "unisex", image: "P/جنسين/Crown Black.jpg", sizes: [{ size: "100 مل", price: 5 }] },
+            { id: 2, name: "مجموعة سجنتشر", category: "packages", image: "P/بكجات/مجموعة سجنتشر.jpg", sizes: [{ size: "100 مل", price: 12 }], contents: ["طقم عطور سجنتشر مكون من 4 عبوات بسعة 100 مل"] }
         ];
 
         let cart = [];
@@ -607,9 +676,11 @@ const firebaseConfig = {
             }
 
             filtered.forEach(p => {
-                const hasContents = p.contents && p.contents.length > 0;
-                const deleteBtnHTML = (isAdminLoggedIn && p.firebaseKey) 
-                    ? `<button class="delete-prod-btn" style="display:block" onclick="deleteFirebaseProduct('${p.firebaseKey}')">حذف المنتج <i class="fa-solid fa-trash"></i></button>` 
+                const adminBtnsHTML = (isAdminLoggedIn && p.firebaseKey) 
+                    ? `<div class="admin-action-btns">
+                        <button class="edit-prod-btn" onclick="openEditModal('${p.firebaseKey}')">تعديل <i class="fa-solid fa-pen"></i></button>
+                        <button class="delete-prod-btn" onclick="deleteFirebaseProduct('${p.firebaseKey}')">حذف <i class="fa-solid fa-trash"></i></button>
+                      </div>` 
                     : '';
 
                 const card = document.createElement('div');
@@ -628,7 +699,7 @@ const firebaseConfig = {
                         <div class="product-bottom">
                             <span class="product-price">${p.sizes[0].price} د.ب</span>
                             <button class="add-to-cart-btn" onclick="addToCart('${p.name}', ${p.sizes[0].price}, '${p.sizes[0].size}')">إضافة للسلة</button>
-                            ${deleteBtnHTML}
+                            ${adminBtnsHTML}
                         </div>
                     </div>
                 `;
@@ -636,7 +707,7 @@ const firebaseConfig = {
             });
         }
 
-        /* إدارة لوحة التحكم وكلمة المرور */
+        /* الإدارة وكلمة المرور */
         function openAdminAuth() {
             if(isAdminLoggedIn) {
                 document.getElementById('admin-panel-modal').classList.add('active');
@@ -653,20 +724,24 @@ const firebaseConfig = {
             document.getElementById('admin-panel-modal').classList.remove('active');
         }
 
+        function closeEditModal() {
+            document.getElementById('edit-product-modal').classList.remove('active');
+        }
+
         function verifyAdminPassword() {
             const pass = document.getElementById('admin-pass-input').value;
             if(pass === "12345678") {
                 isAdminLoggedIn = true;
                 closeAdminAuth();
                 document.getElementById('admin-panel-modal').classList.add('active');
-                renderProducts(); // لإظهار أزرار الحذف
+                renderProducts();
                 alert("تم تسجيل الدخول بنجاح!");
             } else {
                 alert("كلمة المرور غير صحيحة!");
             }
         }
 
-        /* إضافة منتج جديد ورفعه إلى Firebase */
+        /* إضافة منتج جديد */
         function handleAddNewProduct(e) {
             e.preventDefault();
             const name = document.getElementById('new-prod-name').value;
@@ -676,39 +751,86 @@ const firebaseConfig = {
             const contentsRaw = document.getElementById('new-prod-contents').value;
             const imageFile = document.getElementById('new-prod-image').files[0];
 
-            if(!imageFile) {
-                alert("يرجى اختيار صورة للمنتج");
-                return;
-            }
+            if(!imageFile) return alert("يرجى اختيار صورة للمنتج");
 
-            // تحويل الصورة المرفوعة إلى Base64 للحفظ المباشر
             const reader = new FileReader();
             reader.onload = function(event) {
-                const imageBase64 = event.target.result;
-                const contentsArray = contentsRaw ? contentsRaw.split(',').map(s => s.trim()) : [];
-
                 const newProductData = {
                     name: name,
                     category: category,
-                    image: imageBase64,
+                    image: event.target.result,
                     sizes: [{ size: size, price: price }],
-                    contents: contentsArray
+                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()) : []
                 };
 
-                // النشر إلى قاعدة فايربيس
                 if(window.productsRef) {
                     window.push(window.productsRef, newProductData)
                     .then(() => {
-                        alert("تم نشر المنتج بنجاح في المتجر!");
+                        alert("تم نشر المنتج بنجاح!");
                         document.getElementById('add-product-form').reset();
                         closeAdminPanel();
-                    })
-                    .catch(err => alert("حدث خطأ أثناء الحفظ: " + err.message));
-                } else {
-                    alert("قاعدة البيانات غير متصلة حالياً، يرجى ضبط الإعدادات.");
+                    });
                 }
             };
             reader.readAsDataURL(imageFile);
+        }
+
+        /* فتح نافذة التعديل وتعبئة البيانات للحالية */
+        function openEditModal(key) {
+            const product = window.dbProducts.find(p => p.firebaseKey === key);
+            if(!product) return;
+
+            document.getElementById('edit-prod-key').value = key;
+            document.getElementById('edit-prod-name').value = product.name;
+            document.getElementById('edit-prod-category').value = product.category;
+            document.getElementById('edit-prod-price').value = product.sizes[0].price;
+            document.getElementById('edit-prod-size').value = product.sizes[0].size;
+            document.getElementById('edit-prod-contents').value = product.contents ? product.contents.join(', ') : '';
+            document.getElementById('edit-prod-old-image').value = product.image;
+            document.getElementById('edit-prod-preview').src = product.image;
+
+            document.getElementById('edit-product-modal').classList.add('active');
+        }
+
+        /* حفظ التعديلات وإرسالها لـ Firebase */
+        function handleUpdateProduct(e) {
+            e.preventDefault();
+            const key = document.getElementById('edit-prod-key').value;
+            const name = document.getElementById('edit-prod-name').value;
+            const category = document.getElementById('edit-prod-category').value;
+            const price = parseFloat(document.getElementById('edit-prod-price').value);
+            const size = document.getElementById('edit-prod-size').value;
+            const contentsRaw = document.getElementById('edit-prod-contents').value;
+            const oldImage = document.getElementById('edit-prod-old-image').value;
+            const newImageFile = document.getElementById('edit-prod-image').files[0];
+
+            const saveUpdate = (imageToSave) => {
+                const updatedData = {
+                    name: name,
+                    category: category,
+                    image: imageToSave,
+                    sizes: [{ size: size, price: price }],
+                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()) : []
+                };
+
+                const itemRef = window.ref(window.db, 'products/' + key);
+                window.update(itemRef, updatedData)
+                .then(() => {
+                    alert("تم تحديث المنتج بنجاح!");
+                    closeEditModal();
+                })
+                .catch(err => alert("حدث خطأ أثناء التعديل: " + err.message));
+            };
+
+            if (newImageFile) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    saveUpdate(event.target.result);
+                };
+                reader.readAsDataURL(newImageFile);
+            } else {
+                saveUpdate(oldImage);
+            }
         }
 
         function deleteFirebaseProduct(key) {

@@ -880,7 +880,7 @@
                 </div>
 
                 <div class="admin-form-group">
-                    <label>صورة المنتج (من الهاتف):</label>
+                    <label>صورة المنتج:</label>
                     <input type="file" id="new-prod-image" accept="image/*" required>
                 </div>
 
@@ -1279,41 +1279,41 @@
             }
         }
 
-        /* إضافة منتج جديد */
-        function handleAddNewProduct(e) {
-            e.preventDefault();
-            const name = document.getElementById('new-prod-name').value;
-            const category = document.getElementById('new-prod-category').value;
-            const price = parseFloat(document.getElementById('new-prod-price').value);
-            const size = document.getElementById('new-prod-size').value || "";
-            const contentsRaw = document.getElementById('new-prod-contents').value;
-            const isOutOfStock = document.getElementById('new-prod-out-of-stock').checked;
-            const imageFile = document.getElementById('new-prod-image').files[0];
+/* إضافة منتج جديد */
+function handleAddNewProduct(e) {
+    e.preventDefault();
+    const name = document.getElementById('new-prod-name').value;
+    const category = document.getElementById('new-prod-category').value;
+    const price = parseFloat(document.getElementById('new-prod-price').value);
+    const size = document.getElementById('new-prod-size').value || "";
+    const contentsRaw = document.getElementById('new-prod-contents').value;
+    const isOutOfStock = document.getElementById('new-prod-out-of-stock').checked;
+    const imageFile = document.getElementById('new-prod-image').files[0];
 
-            if(!imageFile) return alert("يرجى اختيار صورة للمنتج");
+    if(!imageFile) return alert("يرجى اختيار صورة للمنتج");
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const newProductData = {
-                    name: name,
-                    category: category,
-                    image: event.target.result,
-                    sizes: [{ size: size, price: price }],
-                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : [],
-                    isOutOfStock: isOutOfStock
-                };
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const newProductData = {
+            name: name,
+            category: category,
+            image: event.target.result,
+            sizes: [{ size: size, price: price }],
+            contents: contentsRaw ? contentsRaw.split(/[-/،,.]/).map(s => s.trim()).filter(s => s.length > 0) : [],
+            isOutOfStock: isOutOfStock
+        };
 
-                if(window.productsRef) {
-                    window.push(window.productsRef, newProductData)
-                    .then(() => {
-                        alert("تم نشر المنتج بنجاح!");
-                        document.getElementById('add-product-form').reset();
-                        closeAdminPanel();
-                    });
-                }
-            };
-            reader.readAsDataURL(imageFile);
+        if(window.productsRef) {
+            window.push(window.productsRef, newProductData)
+            .then(() => {
+                alert("تم نشر المنتج بنجاح!");
+                document.getElementById('add-product-form').reset();
+                closeAdminPanel();
+            });
         }
+    };
+    reader.readAsDataURL(imageFile);
+}
 
         /* فتح نافذة التعديل */
         function openEditModal(key) {
@@ -1333,48 +1333,48 @@
             document.getElementById('edit-product-modal').classList.add('active');
         }
 
-        /* حفظ التعديلات */
-        function handleUpdateProduct(e) {
-            e.preventDefault();
-            const key = document.getElementById('edit-prod-key').value;
-            const name = document.getElementById('edit-prod-name').value;
-            const category = document.getElementById('edit-prod-category').value;
-            const price = parseFloat(document.getElementById('edit-prod-price').value);
-            const size = document.getElementById('edit-prod-size').value;
-            const contentsRaw = document.getElementById('edit-prod-contents').value;
-            const isOutOfStock = document.getElementById('edit-prod-out-of-stock').checked;
-            const oldImage = document.getElementById('edit-prod-old-image').value;
-            const newImageFile = document.getElementById('edit-prod-image').files[0];
+/* حفظ التعديلات */
+function handleUpdateProduct(e) {
+    e.preventDefault();
+    const key = document.getElementById('edit-prod-key').value;
+    const name = document.getElementById('edit-prod-name').value;
+    const category = document.getElementById('edit-prod-category').value;
+    const price = parseFloat(document.getElementById('edit-prod-price').value);
+    const size = document.getElementById('edit-prod-size').value;
+    const contentsRaw = document.getElementById('edit-prod-contents').value;
+    const isOutOfStock = document.getElementById('edit-prod-out-of-stock').checked;
+    const oldImage = document.getElementById('edit-prod-old-image').value;
+    const newImageFile = document.getElementById('edit-prod-image').files[0];
 
-            const saveUpdate = (imageToSave) => {
-                const updatedData = {
-                    name: name,
-                    category: category,
-                    image: imageToSave,
-                    sizes: [{ size: size, price: price }],
-                    contents: contentsRaw ? contentsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : [],
-                    isOutOfStock: isOutOfStock
-                };
+    const saveUpdate = (imageToSave) => {
+        const updatedData = {
+            name: name,
+            category: category,
+            image: imageToSave,
+            sizes: [{ size: size, price: price }],
+            contents: contentsRaw ? contentsRaw.split(/[-/،,.]/).map(s => s.trim()).filter(s => s.length > 0) : [],
+            isOutOfStock: isOutOfStock
+        };
 
-                const itemRef = window.ref(window.db, 'products/' + key);
-                window.update(itemRef, updatedData)
-                .then(() => {
-                    alert("تم تحديث المنتج بنجاح!");
-                    closeEditModal();
-                })
-                .catch(err => alert("حدث خطأ أثناء التعديل: " + err.message));
-            };
+        const itemRef = window.ref(window.db, 'products/' + key);
+        window.update(itemRef, updatedData)
+        .then(() => {
+            alert("تم تحديث المنتج بنجاح!");
+            closeEditModal();
+        })
+        .catch(err => alert("حدث خطأ أثناء التعديل: " + err.message));
+    };
 
-            if (newImageFile) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    saveUpdate(event.target.result);
-                };
-                reader.readAsDataURL(newImageFile);
-            } else {
-                saveUpdate(oldImage);
-            }
-        }
+    if (newImageFile) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            saveUpdate(event.target.result);
+        };
+        reader.readAsDataURL(newImageFile);
+    } else {
+        saveUpdate(oldImage);
+    }
+}
 
         function deleteFirebaseProduct(key) {
             if(confirm("هل أنت تأكد من رغبتك في حذف هذا المنتج؟")) {

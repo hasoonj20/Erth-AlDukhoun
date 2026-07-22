@@ -830,7 +830,7 @@
                 <!-- يمين: الاسم، السعر، زر الورقة، زر الإضافة المطور -->
                 <div class="pd-info-section">
                     <h1 class="pd-title" id="pd-title">اسم العطر</h1>
-                    <span class="pd-size-tag" id="pd-size">100 مل</span>
+                    <span class="pd-size-tag" id="pd-size" style="display:none;">100 مل</span>
                     <div class="pd-price" id="pd-price">0 د.ب</div>
 
                     <!-- زر الورقة المخصص لتركيبة العطر أو محتويات البكج -->
@@ -879,7 +879,7 @@
                             <label>السعر (د.ب):</label>
                             <input type="number" step="0.1" id="new-prod-price" required placeholder="12">
                         </div>
-                        <div class="admin-form-group">
+                        <div class="admin-form-group" id="new-size-group">
                             <label>الحجم / السعة:</label>
                             <input type="text" id="new-prod-size" value="100 مل">
                         </div>
@@ -941,7 +941,7 @@
                     <label>السعر (د.ب):</label>
                     <input type="number" step="0.1" id="edit-prod-price" required>
                 </div>
-                <div class="admin-form-group">
+                <div class="admin-form-group" id="edit-size-group">
                     <label>الحجم / السعة:</label>
                     <input type="text" id="edit-prod-size">
                 </div>
@@ -988,7 +988,22 @@
             
             <div id="cart-items-list" class="cart-items-container"></div>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; font-weight:700; margin: 18px 0 15px 0; padding-top: 10px; border-top: 1px solid #eee;">
+            <!-- خيارات طريقة الاستلام (التوصيل دينارين - والاستلام مجانا) -->
+            <div style="margin: 15px 0; padding: 12px; background: var(--bg-color); border-radius: 12px; border: 1px solid rgba(184, 144, 71, 0.2);">
+                <label style="display:block; font-weight:700; margin-bottom:8px; color:var(--gold-dark); font-size: 0.95rem;">
+                    <i class="fa-solid fa-truck-fast"></i> طريقة الاستلام:
+                </label>
+                <div style="display:flex; gap:20px; font-size:0.9rem;">
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <input type="radio" name="delivery" value="التوصيل (2 د.ب)" checked onchange="updateCartUI()"> توصيل (2 د.ب)
+                    </label>
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <input type="radio" name="delivery" value="الاستلام من المتجر (مجاناً)" onchange="updateCartUI()"> استلام مجاناً
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; font-weight:700; margin: 15px 0 15px 0; padding-top: 10px; border-top: 1px solid #eee;">
                 <span style="font-size: 1.05rem;">الإجمالي النهائي:</span>
                 <span id="cart-total" style="font-size: 1.2rem; color: var(--gold-dark);">0 د.ب</span>
             </div>
@@ -1135,7 +1150,14 @@
             document.getElementById('pd-image').src = product.image;
             document.getElementById('pd-title').innerText = product.name;
             document.getElementById('pd-price').innerText = (product.sizes ? product.sizes[0].price : product.price) + " د.ب";
-            document.getElementById('pd-size').innerText = (product.sizes && product.sizes[0].size) ? product.sizes[0].size : "سعة قياسية";
+            
+            const sizeTag = document.getElementById('pd-size');
+            if (product.category === 'packages') {
+                sizeTag.style.display = 'none';
+            } else {
+                sizeTag.style.display = 'inline-block';
+                sizeTag.innerText = (product.sizes && product.sizes[0].size) ? product.sizes[0].size : "100 مل";
+            }
 
             const leafBtn = document.getElementById('pd-notes-btn');
             
@@ -1167,8 +1189,7 @@
             if (!selectedProductForDetail) return;
 
             const product = selectedProductForDetail;
-            const price = product.sizes ? product.sizes[0].price : product.price;
-            const size = (product.sizes && product.sizes[0].size) ? product.sizes[0].size : '';
+            const size = (product.category === 'packages') ? '' : ((product.sizes && product.sizes[0].size) ? product.sizes[0].size : '');
             
             const cartIndex = cart.findIndex(item => item.name === product.name && item.size === size);
 
@@ -1193,7 +1214,7 @@
         function handleDetailAddToCart() {
             const p = selectedProductForDetail;
             const price = p.sizes ? p.sizes[0].price : p.price;
-            const size = (p.sizes && p.sizes[0].size) ? p.sizes[0].size : '';
+            const size = (p.category === 'packages') ? '' : ((p.sizes && p.sizes[0].size) ? p.sizes[0].size : '');
             
             addToCart(p.name, price, size, p.image);
             renderProductActionBtn();
@@ -1201,7 +1222,7 @@
 
         function updateDetailProductQty(delta) {
             const p = selectedProductForDetail;
-            const size = (p.sizes && p.sizes[0].size) ? p.sizes[0].size : '';
+            const size = (p.category === 'packages') ? '' : ((p.sizes && p.sizes[0].size) ? p.sizes[0].size : '');
             
             const cartIndex = cart.findIndex(item => item.name === p.name && item.size === size);
             if (cartIndex > -1) {
@@ -1243,13 +1264,16 @@
             const cat = document.getElementById(`${mode}-prod-category`).value;
             const notesGroup = document.getElementById(`${mode}-notes-group`);
             const contentsGroup = document.getElementById(`${mode}-contents-group`);
+            const sizeGroup = document.getElementById(`${mode}-size-group`);
 
             if (cat === 'packages') {
                 notesGroup.style.display = 'none';
                 contentsGroup.style.display = 'block';
+                if(sizeGroup) sizeGroup.style.display = 'none';
             } else {
                 notesGroup.style.display = 'block';
                 contentsGroup.style.display = 'none';
+                if(sizeGroup) sizeGroup.style.display = 'block';
             }
         }
 
@@ -1269,12 +1293,12 @@
             const list = document.getElementById('cart-items-list');
             list.innerHTML = '';
             let totalItemCount = 0;
-            let totalPrice = 0;
+            let itemsTotal = 0;
 
             cart.forEach((item, index) => {
                 totalItemCount += item.qty;
                 const itemTotal = item.price * item.qty;
-                totalPrice += itemTotal;
+                itemsTotal += itemTotal;
 
                 const card = document.createElement('div');
                 card.className = 'cart-item-card';
@@ -1293,6 +1317,13 @@
                 list.appendChild(card);
             });
 
+            const deliveryRadio = document.querySelector('input[name="delivery"]:checked');
+            let deliveryFee = 0;
+            if (deliveryRadio && deliveryRadio.value.includes('التوصيل')) {
+                deliveryFee = 2.0;
+            }
+            const totalPrice = itemsTotal + deliveryFee;
+
             document.getElementById('cart-count').innerText = totalItemCount;
             document.getElementById('cart-total').innerText = totalPrice.toFixed(1) + " د.ب";
         }
@@ -1302,7 +1333,6 @@
             if (cart[index].qty <= 0) cart.splice(index, 1);
             updateCartUI();
             
-            // تحديث أزرار صفحة تفاصيل المنتج إذا كانت مفتوحة لمنتج متأثر
             if (document.getElementById('product-detail-view').classList.contains('active')) {
                 renderProductActionBtn();
             }
@@ -1348,7 +1378,7 @@
             const name = document.getElementById('new-prod-name').value;
             const category = document.getElementById('new-prod-category').value;
             const price = parseFloat(document.getElementById('new-prod-price').value);
-            const size = document.getElementById('new-prod-size').value;
+            const size = (category === 'packages') ? '' : document.getElementById('new-prod-size').value;
             const notesRaw = document.getElementById('new-prod-notes').value;
             const contentsRaw = document.getElementById('new-prod-contents').value;
             const imageFile = document.getElementById('new-prod-image').files[0];
@@ -1402,7 +1432,7 @@
             const name = document.getElementById('edit-prod-name').value;
             const category = document.getElementById('edit-prod-category').value;
             const price = parseFloat(document.getElementById('edit-prod-price').value);
-            const size = document.getElementById('edit-prod-size').value;
+            const size = (category === 'packages') ? '' : document.getElementById('edit-prod-size').value;
             const notesRaw = document.getElementById('edit-prod-notes').value;
             const contentsRaw = document.getElementById('edit-prod-contents').value;
             const oldImage = document.getElementById('edit-prod-old-image').value;
@@ -1477,17 +1507,38 @@
 
         function filterProducts() { renderProducts(); }
 
+        /* دالة إرسال الطلب عبر الواتساب بالشكل المطلوب مع استثناء السعة للبكجات */
         function sendToWhatsApp() {
-            if (cart.length === 0) return showToast("السلة فارغة!", "fa-solid fa-circle-exclamation");
-            let msg = `🔥 *طلب جديد من متجر إرث الدخون* 🔥\n\n`;
-            let total = 0;
+            if(cart.length === 0) {
+                showToast("🛍️ يرجى إضافة منتجات للسلة أولاً قبل إتمام الطلب.", "fa-solid fa-circle-exclamation");
+                return;
+            }
+
+            const deliveryInput = document.querySelector('input[name="delivery"]:checked');
+            const deliveryMethod = deliveryInput ? deliveryInput.value : "التوصيل (2 د.ب)";
+
+            let message = `🔥 *طلب من متجر إرث الدخون* 🔥\n`;
+            message += `-----------------------------------\n\n`;
+            
             cart.forEach((item, i) => {
-                const itemTotal = item.price * item.qty;
-                total += itemTotal;
-                msg += `${i+1}- ${item.name} (${item.qty}x) = ${itemTotal.toFixed(1)} د.ب\n`;
+                message += `*${i+1}- ${item.name}* 🧴\n`;
+                if (item.size && item.size.trim() !== '') {
+                    message += `📏 السعة: ${item.size}\n`;
+                }
+                message += `🔢 الكمية: ${item.qty}\n`;
+                message += `💵 السعر: ${(item.price * item.qty).toFixed(1)} د.ب\n\n`;
             });
-            msg += `\n💰 *الإجمالي النهائي:* ${total.toFixed(1)} د.ب`;
-            window.open(`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+
+            const itemsTotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const deliveryFee = deliveryMethod.includes('التوصيل') ? 2.0 : 0;
+            const totalCost = itemsTotal + deliveryFee;
+
+            message += `-----------------------------------\n`;
+            message += `🚚 *طريقة الاستلام:* ${deliveryMethod}\n`;
+            message += `💰 *الإجمالي الكلي:* ${totalCost.toFixed(1)} د.ب\n\n`;
+            message += `✨ يرجى تأكيد الطلب وتزويدي بالتفاصيل المتبقية.`;
+
+            window.open(`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
         }
     </script>
 </body>
